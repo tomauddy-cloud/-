@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<title>ระบบสำรวจสัตว์ งานสัตวแพทย์</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<style>
+body { font-family: "Sarabun", Arial, sans-serif; background:#f4f6fb; margin:0; }
+header { background:#fff; padding:20px; text-align:center; border-bottom:4px solid #2c3e90; }
+main { max-width:900px; margin:30px auto; background:#fff; padding:30px; border-radius:10px; box-shadow:0 6px 15px rgba(0,0,0,.1); }
+.center-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:15px; }
+.center-card { border:1px solid #ddd; border-radius:8px; padding:15px; text-align:center; background:#f9fafc; }
+.center-card button { margin-top:10px; padding:10px 18px; background:#2c3e90; color:#fff; border:none; border-radius:6px; cursor:pointer; }
+label { display:block; margin-top:10px; }
+input, select { width:100%; padding:6px; margin-top:4px; }
+.pet-card { border:1px solid #ccc; padding:10px; margin-top:10px; border-radius:6px; }
+footer { text-align:center; padding:15px; color:#666; font-size:14px; }
+</style>
+</head>
+<body>
+<header>
+  <div style="display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap;">
+    
+    <div style="text-align:center;">
+      <div style="border-bottom:2px solid #2c3e90; padding-bottom:10px; margin-bottom:10px;">
+        <h1 style="margin:0;font-size:26px;">เทศบาลนครอุบลราชธานี</h1>
+        <h2 style="margin:5px 0 0;font-size:20px;font-weight:normal;">กองสาธารณสุขและสิ่งแวดล้อม ฝ่ายบริการสาธารณสุข</h2>
+      </div>
+      <div>
+        <h3 style="margin:5px 0 0;font-size:18px;">งานสัตวแพทย์</h3>
+        <p style="margin:0;font-size:16px;">แบบสำรวจสัตว์ ประจำปีงบประมาณ 2569</p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+<h2 style="text-align:center">เลือกศูนย์บริการสาธารณสุขตามสถานที่อยู่เจ้าของสัตว์</h2>
+<div class="center-list">
+  <div class="center-card">ศูนย์บริการสาธารณสุขศูนย์ที่ 1<br><button type="button" onclick="openForm(1)">กดเริ่มสำรวจ</button></div>
+  <div class="center-card">ศูนย์บริการสาธารณสุขศูนย์ที่ 2<br><button type="button" onclick="openForm(2)">กดเริ่มสำรวจ</button></div>
+  <div class="center-card">ศูนย์บริการสาธารณสุขศูนย์ที่ 3<br><button type="button" onclick="openForm(3)">กดเริ่มสำรวจ</button></div>
+  <div class="center-card">ศูนย์บริการสาธารณสุขศูนย์ที่ 4<br><button type="button" onclick="openForm(4)">กดเริ่มสำรวจ</button></div>
+  <div class="center-card">ศูนย์บริการสาธารณสุขศูนย์ที่ 5<br><button type="button" onclick="openForm(5)">กดเริ่มสำรวจ</button></div>
+  <div class="center-card">ศูนย์บริการสาธารณสุขศูนย์ที่ 6<br><button type="button" onclick="openForm(6)">กดเริ่มสำรวจ</button></div>
+  <div class="center-card">ศูนย์บริการสาธารณสุขศูนย์ที่ 7<br><button type="button" onclick="openForm(7)">กดเริ่มสำรวจ</button></div>
+</div>
+
+<div id="formSection" style="display:none; margin-top:40px;">
+<h2>แบบฟอร์มสำรวจสัตว์</h2>
+<p id="centerLabel" style="font-weight:bold;color:#2c3e90"></p>
+<form id="surveyForm">
+<input type="hidden" id="centerId"><input type="hidden" id="centerName">
+
+<label>ปีงบประมาณ</label>
+<input type="number" id="year" value="2569" required>
+
+<label>ชุมชน</label>
+<input type="text" id="community" placeholder="กรอกชื่อชุมชน" required>
+
+<label>ประเภทสัตว์</label>
+<select id="animalType" required>
+  <option value="">-- เลือก --</option>
+  <option>ไม่มี</option>
+  <option>สุนัข</option><option>แมว</option><option>โค</option><option>เป็ด</option><option>ไก่</option><option>สุกร</option><option>นก</option><option>แพะ</option><option>ม้า</option><option>อื่น ๆ</option>
+</select>
+
+<label>จำนวนสัตว์เลี้ยง</label>
+<input type="number" id="petQty" min="0" max="100" value="0">
+<div id="petList"></div>
+
+<h3>ข้อมูลผู้บันทึก</h3>
+<label>ชื่อเจ้าของสัตว์เลี้ยง</label>
+<input type="text" id="recorderName">
+
+<label>หมายเลขบัตรประชาชน เจ้าของสัตว์เลี้ยง (13 หลัก)</label>
+<input type="text" id="citizenId" maxlength="13" minlength="13" pattern="\d{13}" required>
+
+<label>บ้านเลขที่ เจ้าของสัตว์เลี้ยง</label><input id="addrNo">
+<label>ถนน</label><input id="road">
+<label>ซอย</label><input id="soi">
+<label>ตำบล</label><input id="subdistrict">
+<label>อำเภอ</label><input id="district">
+<label>จังหวัด</label><input id="province">
+
+<label>เบอร์โทรศัพท์</label>
+<input type="text" id="phone">
+
+<button type="submit" style="margin-top:15px;padding:10px 20px;background:#2c3e90;color:#fff;border:none;border-radius:6px;">บันทึกข้อมูล</button>
+</form>
+<p id="status" style="margin-top:15px;"></p>
+</div>
+</main>
+
+<footer>© เทศบาลนครอุบลราชธานี | กองสาธารณสุขและสิ่งแวดล้อม งานสัตวแพทย์ 045-246060 ต่อ 180 280</footer>
+
+<script>
+function openForm(center) {
+  const names = {
+    1:'ศูนย์บริการสาธารณสุขศูนย์ที่ 1',
+    2:'ศูนย์บริการสาธารณสุขศูนย์ที่ 2',
+    3:'ศูนย์บริการสาธารณสุขศูนย์ที่ 3',
+    4:'ศูนย์บริการสาธารณสุขศูนย์ที่ 4',
+    5:'ศูนย์บริการสาธารณสุขศูนย์ที่ 5',
+    6:'ศูนย์บริการสาธารณสุขศูนย์ที่ 6',
+    7:'ศูนย์บริการสาธารณสุขศูนย์ที่ 7'
+  };
+
+  document.getElementById('formSection').style.display = 'block';
+
+  // เก็บเลขศูนย์
+  document.getElementById('centerId').value = center;
+
+  // ⭐ เก็บชื่อศูนย์ตัวจริง (หัวใจของการแยก Sheet)
+  document.getElementById('centerName').value = names[center];
+
+  // แสดงผลบนหน้าเว็บ
+  document.getElementById('centerLabel').innerText =
+    'ศูนย์ที่กำลังบันทึกข้อมูล: ' + names[center];
+}
+
+const petQtyInput = document.getElementById('petQty');
+const petList = document.getElementById('petList');
+petQtyInput.addEventListener('input', syncPetList);
+
+function syncPetList() {
+  const qty = parseInt(petQtyInput.value||0);
+
+  // บังคับกรอกชื่อเจ้าของสัตว์เลี้ยงเมื่อมีสัตว์
+  const ownerInput = document.getElementById('recorderName');
+  if(qty > 0){
+    ownerInput.required = true;
+    ownerInput.placeholder = 'กรุณากรอกชื่อเจ้าของสัตว์เลี้ยง';
+  }else{
+    ownerInput.required = false;
+    ownerInput.placeholder = '';
+  }
+
+  while (petList.children.length < qty) petList.appendChild(createPetCard(petList.children.length+1));
+  while (petList.children.length > qty) petList.removeChild(petList.lastChild);
+}
+
+function toggleRabiesDate(selectEl){
+  const card = selectEl.closest('.pet-card');
+  const dateInput = card.querySelector('.rabiesDate');
+  if(selectEl.value === 'เคยฉีดวัคซีนพิษสุนัขบ้า'){
+    dateInput.style.display = 'block';
+    dateInput.required = true;
+  }else{
+    dateInput.style.display = 'none';
+    dateInput.required = false;
+    dateInput.value = '';
+  }
+}
+
+function toggleContraceptiveDate(sel){
+  const card = sel.closest('.pet-card');
+  const date = card.querySelector('.contraceptiveDate');
+  if(sel.value==='ฉีดยาคุม'){ date.style.display='block'; date.required=true; }
+  else { date.style.display='none'; date.required=false; date.value=''; }
+}
+
+function createPetCard(no) {
+  const d=document.createElement('div');
+  d.className='pet-card';
+  d.innerHTML=`<strong>สัตว์ตัวที่ ${no}</strong>
+    <input class="petName" placeholder="ชื่อสัตว์">
+    <select class="gender"><option>ผู้</option><option>เมีย</option><option>ไม่ระบุ</option></select>
+    <input type="number" class="ageYear" placeholder="อายุ (ปี)" min="0">
+    <input type="number" class="ageMonth" placeholder="อายุ (เดือน)" min="0" max="11">
+    <input class="color" placeholder="สี / ตำหนิ">
+    <select class="sterilization" onchange="toggleContraceptiveDate(this)"><option>ยังไม่ทำหมัน</option><option>ทำหมันแล้ว</option><option>ฉีดยาคุม</option></select>
+    <input type="date" class="contraceptiveDate" style="display:none">
+    <select class="rabies" onchange="toggleRabiesDate(this)"><option>ไม่เคยฉีดวัคซีนพิษสุนัขบ้า</option><option>เคยฉีดวัคซีนพิษสุนัขบ้า</option></select>
+    <input type="date" class="rabiesDate" style="display:none" placeholder="วันที่ฉีดวัคซีนพิษสุนัขบ้าล่าสุด">
+    <select class="raising"><option>เลี้ยงในพื้นที่จำกัดตลอดเวลา</option><option>เลี้ยงในพื้นที่จำกัดบางเวลา</option><option>เลี้ยงแบบปล่อยตลอดเวลา</option></select>
+    <select class="location"><option>บ้านพักอาศัย</option><option>สถานที่ราชการ</option><option>วัด</option><option>ตลาด</option><option>บริเวณหมู่บ้าน</option><option>สถานที่เอกชน</option></select>`;
+  return d;
+}
+
+ </script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+  // หา input ผู้บันทึกข้อมูล (ใช้เป็นจุดอ้างอิงในการแทรก)
+  const recorderInput = document.getElementById('recorderName');
+  if (!recorderInput) return;
+
+  /* ===== label สัตวแพทย์ผู้ฉีด ===== */
+  const vetLabel = document.createElement('label');
+  vetLabel.textContent = 'สัตวแพทย์ผู้ฉีด';
+
+  /* ===== select สัตวแพทย์ผู้ฉีด ===== */
+  const vetSelect = document.createElement('select');
+  vetSelect.id = 'vetProvider';
+  vetSelect.required = true;
+  vetSelect.innerHTML = `
+    <option value="">-- เลือก --</option>
+    <option value="เทศบาลนครอุบลราชธานี/งานสัตวแพทย์">เทศบาลนครอุบลราชธานี / งานสัตวแพทย์</option>
+    <option value="คลินิก/โรงพยาบาลสัตว์">คลินิก / โรงพยาบาลสัตว์</option>
+    <option value="อาสาปศุสัตว์ที่ได้รับแต่งตั้ง">อาสาปศุสัตว์ที่ได้รับแต่งตั้ง</option>
+    <option value="คนรู้จัก">คนรู้จัก</option>
+    <option value="ฉีดเอง">ฉีดเอง</option>
+    <option value="อื่นๆ">อื่น ๆ</option>
+  `;
+
+  /* ===== ช่องกรอกชื่อเพิ่มเติม (ซ่อนเริ่มต้น) ===== */
+  const vetOtherInput = document.createElement('input');
+  vetOtherInput.type = 'text';
+  vetOtherInput.id = 'vetProviderOther';
+  vetOtherInput.placeholder = 'ระบุชื่อสัตวแพทย์ / ผู้ฉีด';
+  vetOtherInput.style.display = 'none';
+
+  /* ===== การแสดง/ซ่อนช่องกรอกชื่อ ===== */
+  vetSelect.addEventListener('change', function () {
+    if (this.value === 'อื่นๆ') {
+      vetOtherInput.style.display = 'block';
+      vetOtherInput.required = true;
+    } else {
+      vetOtherInput.style.display = 'none';
+      vetOtherInput.required = false;
+      vetOtherInput.value = '';
+    }
+  });
+
+  /* ===== แทรกลงในฟอร์ม ===== */
+  recorderInput.insertAdjacentElement('afterend', vetOtherInput);
+  recorderInput.insertAdjacentElement('afterend', vetSelect);
+  recorderInput.insertAdjacentElement('afterend', vetLabel);
+
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+  /* 1) เปลี่ยนชื่อ label */
+  document.querySelectorAll('label').forEach(label => {
+    if (label.textContent.trim() === 'ชื่อเจ้าของสัตว์เลี้ยง') {
+      label.textContent = 'ผู้บันทึกข้อมูล / ผู้สำรวจข้อมูล';
+    }
+  });
+
+  /* 2) เพิ่มช่องตำแหน่ง */
+  const recorderInput = document.getElementById('recorderName');
+  const phoneInput = document.getElementById('phone');
+
+  if (recorderInput) {
+    const roleLabel = document.createElement('label');
+    roleLabel.textContent = 'ตำแหน่ง';
+
+    const roleSelect = document.createElement('select');
+    roleSelect.id = 'recorderRole';
+    roleSelect.required = true;
+    roleSelect.innerHTML = `
+      <option value="">-- เลือกตำแหน่ง --</option>
+      <option>เจ้าของสัตว์เลี้ยง</option>
+      <option>อสม.</option>
+    `;
+
+    recorderInput.insertAdjacentElement('afterend', roleSelect);
+    roleSelect.insertAdjacentElement('beforebegin', roleLabel);
+
+    /* 3) ถ้าเลือก อสม. ต้องกรอกเบอร์โทร */
+    roleSelect.addEventListener('change', function () {
+      if (!phoneInput) return;
+
+      if (this.value === 'อสม.') {
+        phoneInput.required = true;
+        phoneInput.placeholder = 'กรุณากรอกเบอร์โทรศัพท์ (อสม.)';
+      } else {
+        phoneInput.required = false;
+        phoneInput.placeholder = '';
+      }
+    });
+  }
+
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+  const citizenInput = document.getElementById('citizenId');
+  if (!citizenInput) return;
+
+  /* ไล่ย้อนขึ้นไปลบ label + select + input ที่เป็นช่องสัตวแพทย์ผู้ฉีด */
+  let el = citizenInput.previousElementSibling;
+
+  while (el) {
+    // 
+    if (el.tagName === 'LABEL' && el.textContent.includes('สัตวแพทย์ผู้ฉีด')) {
+      const select = el.nextElementSibling;
+      const otherInput = select && select.nextElementSibling;
+
+      if (select && select.tagName === 'SELECT') select.remove();
+      if (otherInput && otherInput.tagName === 'INPUT') otherInput.remove();
+
+      el.remove();
+      break;
+    }
+
+    el = el.previousElementSibling;
+  }
+
+});
+</script>
+<script>
+document.addEventListener('change', function (e) {
+
+  /* ---------- กรณี ฉีดยาคุม ---------- */
+  if (e.target.classList.contains('sterilization')) {
+    const card = e.target.closest('.pet-card');
+    let box = card.querySelector('.contraceptiveVetBox');
+
+    if (e.target.value === 'ฉีดยาคุม') {
+      if (!box) {
+        box = createVetBox('สัตวแพทย์ผู้ฉีดยาคุม');
+        box.classList.add('contraceptiveVetBox');
+        e.target.insertAdjacentElement('afterend', box);
+      }
+      box.style.display = 'block';
+    } else {
+      if (box) box.style.display = 'none';
+    }
+  }
+
+  /* ---------- กรณี วัคซีนพิษสุนัขบ้า ---------- */
+  if (e.target.classList.contains('rabies')) {
+    const card = e.target.closest('.pet-card');
+    let box = card.querySelector('.rabiesVetBox');
+
+    if (e.target.value === 'เคยฉีดวัคซีนพิษสุนัขบ้า') {
+      if (!box) {
+        box = createVetBox('สัตวแพทย์ผู้ฉีดวัคซีนพิษสุนัขบ้า');
+        box.classList.add('rabiesVetBox');
+        e.target.insertAdjacentElement('afterend', box);
+      }
+      box.style.display = 'block';
+    } else {
+      if (box) box.style.display = 'none';
+    }
+  }
+
+});
+
+/* ---------- ฟังก์ชันสร้างช่องสัตวแพทย์ผู้ฉีด ---------- */
+function createVetBox(labelText) {
+  const wrap = document.createElement('div');
+  wrap.style.marginTop = '6px';
+
+  wrap.innerHTML = `
+    <label>${labelText}</label>
+    <select class="vetSource">
+      <option value="">-- เลือก --</option>
+      <option>เทศบาลนครอุบลราชธานี / งานสัตวแพทย์</option>
+      <option>คลินิก / โรงพยาบาลสัตว์</option>
+      <option>อาสาปศุสัตว์ที่ได้รับแต่งตั้ง</option>
+      <option>คนรู้จัก</option>
+      <option>ฉีดเอง</option>
+      <option>อื่นๆ</option>
+    </select>
+    <input type="text" class="vetName" placeholder="กรอกชื่อสัตวแพทย์ / ผู้ฉีด" style="display:none">
+  `;
+
+  const select = wrap.querySelector('.vetSource');
+  const input = wrap.querySelector('.vetName');
+
+  select.addEventListener('change', function () {
+    if (this.value === 'อื่นๆ') {
+      input.style.display = 'block';
+      input.required = true;
+    } else {
+      input.style.display = 'none';
+      input.required = false;
+      input.value = '';
+    }
+  });
+
+  return wrap;
+}
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+  const roleSelect = document.getElementById('recorderRole');
+  const phoneInput = document.getElementById('phone');
+  const centerIdInput = document.getElementById('centerId');
+
+  if (!roleSelect) return;
+
+  /* ล้าง option เดิม แล้วสร้างใหม่ */
+  roleSelect.innerHTML = `
+    <option value="">-- เลือกตำแหน่ง --</option>
+    <option>เจ้าของสัตว์เลี้ยง</option>
+  `;
+
+  /* เพิ่ม อสม. ตามศูนย์ 1 - 7 */
+  for (let i = 1; i <= 7; i++) {
+    const opt = document.createElement('option');
+    opt.value = `อสม.ศูนย์บริการสาธารณสุขศูนย์ที่ ${i}`;
+    opt.textContent = `อสม.ศูนย์บริการสาธารณสุขศูนย์ที่ ${i}`;
+    roleSelect.appendChild(opt);
+  }
+
+  /* เงื่อนไข: ถ้าเลือก อสม. ต้องกรอกเบอร์โทร */
+  roleSelect.addEventListener('change', function () {
+    if (!phoneInput) return;
+
+    if (this.value.startsWith('อสม.ศูนย์บริการสาธารณสุข')) {
+      phoneInput.required = true;
+      phoneInput.placeholder = 'กรุณากรอกเบอร์โทรศัพท์ (อสม.)';
+    } else {
+      phoneInput.required = false;
+      phoneInput.placeholder = '';
+    }
+  });
+
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+  const phoneInput = document.getElementById('phone');
+  if (!phoneInput) return;
+
+  /* สร้าง label */
+  const placeLabel = document.createElement('label');
+  placeLabel.textContent = 'สถานที่เลี้ยง';
+
+  /* สร้าง select */
+  const placeSelect = document.createElement('select');
+  placeSelect.id = 'raisingPlace';
+  placeSelect.innerHTML = `
+    <option value="">-- เลือก --</option>
+    <option>สถานที่เดียวกับเจ้าของสัตว์</option>
+    <option>ไม่ใช่สถานที่เดียวกับเจ้าของสัตว์</option>
+  `;
+  placeSelect.required = true;
+
+  /* แทรกใต้ช่องเบอร์โทร */
+  phoneInput.insertAdjacentElement('afterend', placeSelect);
+  placeSelect.insertAdjacentElement('beforebegin', placeLabel);
+
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+  const citizenInput = document.getElementById('citizenId');
+  if (!citizenInput) return;
+
+  /* ป้องกันการสร้างซ้ำ */
+  if (document.getElementById('ownerInfoTitle')) return;
+
+  const ownerTitle = document.createElement('h3');
+  ownerTitle.id = 'ownerInfoTitle';
+  ownerTitle.textContent = 'ข้อมูลเจ้าของสัตว์';
+
+  /* ตั้งค่าสีเป็นสีดำ */
+  ownerTitle.style.marginTop = '20px';
+  ownerTitle.style.color = '#000';
+
+  const citizenLabel = citizenInput.previousElementSibling;
+  if (citizenLabel && citizenLabel.tagName === 'LABEL') {
+    citizenLabel.insertAdjacentElement('beforebegin', ownerTitle);
+  }
+
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+  const header = document.querySelector('header');
+  if (!header) return;
+
+  /* เพิ่ม style responsive */
+  const style = document.createElement('style');
+  style.textContent = `
+    @media (max-width: 600px) {
+
+      header {
+        padding: 15px 10px;
+      }
+
+      header h1 {
+        font-size: 20px !important;
+      }
+
+      header h2 {
+        font-size: 16px !important;
+      }
+
+      header h3 {
+        font-size: 16px !important;
+      }
+
+      header p {
+        font-size: 14px !important;
+      }
+
+    }
+  `;
+  document.head.appendChild(style);
+
+});
+</script>
+<script>
+(function () {
+
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbxtbowIoY0EZqJGRD3sN3DIfJgyp2-6cTKqPX34mAFIXVl-twTSmHh1DnPd1Uib5Wo6/exec";
+
+  const form = document.getElementById('surveyForm');
+  if (!form) return;
+
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    /* ---------- รวบรวมข้อมูลสัตว์ ---------- */
+    const pets = [...document.querySelectorAll('.pet-card')].map((card, i) => {
+
+  // ==== สัตวแพทย์ผู้ฉีดยาคุม ====
+  let contraceptiveVet = '';
+  const conBox = card.querySelector('.contraceptiveVetBox');
+  if (conBox) {
+    const source = conBox.querySelector('.vetSource')?.value || '';
+    const name = conBox.querySelector('.vetName')?.value || '';
+    contraceptiveVet = source === 'อื่นๆ' ? name : source;
+  }
+
+  // ==== สัตวแพทย์ผู้ฉีดวัคซีน ====
+  let rabiesVet = '';
+  const rabBox = card.querySelector('.rabiesVetBox');
+  if (rabBox) {
+    const source = rabBox.querySelector('.vetSource')?.value || '';
+    const name = rabBox.querySelector('.vetName')?.value || '';
+    rabiesVet = source === 'อื่นๆ' ? name : source;
+  }
+
+  return {
+    no: i + 1,
+    name: card.querySelector('.petName')?.value || '',
+    gender: card.querySelector('.gender')?.value || '',
+    ageYear: card.querySelector('.ageYear')?.value || '',
+    ageMonth: card.querySelector('.ageMonth')?.value || '',
+    color: card.querySelector('.color')?.value || '',
+    sterilization: card.querySelector('.sterilization')?.value || '',
+    contraceptiveDate: card.querySelector('.contraceptiveDate')?.value || '',
+    contraceptiveVet: contraceptiveVet,   // ✅ key นี้สำคัญมาก
+    rabies: card.querySelector('.rabies')?.value || '',
+    rabiesDate: card.querySelector('.rabiesDate')?.value || '',
+    rabiesVet: rabiesVet,                 // (เผื่อใช้)
+    raising: card.querySelector('.raising')?.value || '',
+    location: card.querySelector('.location')?.value || ''
+  };
+});
+
+    /* ---------- ตรวจสอบข้อมูลก่อนส่ง ---------- */
+
+    // ตรวจบัตรประชาชน 13 หลัก
+    if (document.getElementById('citizenId').value.length !== 13) {
+      alert('กรุณากรอกบัตรประชาชน 13 หลัก');
+      return;
+    }
+
+    // ตรวจจำนวนสัตว์
+    if (pets.length === 0 && document.getElementById('animalType').value !== 'ไม่มี') {
+      alert('กรุณาระบุจำนวนสัตว์');
+      return;
+    }
+
+    /* ---------- payload ---------- */
+    const payload = {
+      timestamp: new Date().toISOString(),
+
+      centerId: document.getElementById('centerId')?.value || '',
+      centerName: document.getElementById('centerName')?.value || '',
+      year: document.getElementById('year')?.value || '',
+      community: document.getElementById('community')?.value || '',
+      animalType: document.getElementById('animalType')?.value || '',
+      petQty: document.getElementById('petQty')?.value || 0,
+             
+             ownerName: document.getElementById('recorderName')?.value || '',
+      recorderName: document.getElementById('recorderName')?.value || '',
+      recorderRole: document.getElementById('recorderRole')?.value || '',
+      citizenId: document.getElementById('citizenId')?.value || '',
+      phone: document.getElementById('phone')?.value || '',
+
+      raisingPlace: document.getElementById('raisingPlace')?.value || '',
+
+      address: {
+        addrNo: document.getElementById('addrNo')?.value || '',
+        road: document.getElementById('road')?.value || '',
+        soi: document.getElementById('soi')?.value || '',
+        subdistrict: document.getElementById('subdistrict')?.value || '',
+        district: document.getElementById('district')?.value || '',
+        province: document.getElementById('province')?.value || ''
+      },
+
+      pets: pets
+    };
+
+    document.getElementById('status').innerText = '⏳ กำลังบันทึกข้อมูล...';
+
+    try {
+      await fetch(GAS_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+
+      document.getElementById('status').innerText = '✅ บันทึกข้อมูลลง Google Sheet เรียบร้อย';
+      form.reset();
+      document.getElementById('petList').innerHTML = '';
+      document.getElementById('petQty').value = 0;
+
+    } catch (err) {
+      console.error(err);
+      document.getElementById('status').innerText = '❌ บันทึกข้อมูลไม่สำเร็จ';
+    }
+  });
+
+})();
+</script>
+
+</body>
+</html>
