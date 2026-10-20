@@ -3,170 +3,126 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ระบบดูกล้องวงจรปิด</title>
+<title>เช็คด่านตรวจ ตามประกาศทางการ</title>
 <style>
-:root{--bg:#f1f4f9;--card:#fff;--tx:#14202e;--mu:#5d6b7e;--bd:#d6dee9;--ac:#1f6feb;--ac2:#fff;--bad:#c93c37;--ok:#1a8f55;--vid:#0b0f14}
-@media(prefers-color-scheme:dark){:root{--bg:#0d131b;--card:#172029;--tx:#e8eef6;--mu:#9aa8ba;--bd:#2a3645;--ac:#58a6ff;--ac2:#0b1320;--bad:#ff7b72;--ok:#4cc38a;color-scheme:dark}}
+:root{--bg:#f2f5fa;--card:#fff;--tx:#14202e;--mu:#5d6b7e;--bd:#d6dee9;--ac:#1f6feb;--ac2:#fff;--bad:#c93c37;--ok:#1a8f55;--warn:#b7791f;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d131b;--card:#172029;--tx:#e8eef6;--mu:#9aa8ba;--bd:#2a3645;--ac:#58a6ff;--ac2:#0b1320;--bad:#ff7b72;--ok:#4cc38a;--warn:#e3b341;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0d131b;--card:#172029;--tx:#e8eef6;--mu:#9aa8ba;--bd:#2a3645;--ac:#58a6ff;--ac2:#0b1320;--bad:#ff7b72;--ok:#4cc38a;--warn:#e3b341;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 'Sarabun','Noto Sans Thai',system-ui,sans-serif;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
-main{max-width:1280px;margin:0 auto;padding:14px}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 'Sarabun','Noto Sans Thai',system-ui,sans-serif}
+main{max-width:900px;margin:0 auto;padding:14px}
 h1{font-size:1.4rem;margin:0}.sub{color:var(--mu);margin:2px 0 12px;font-size:.92rem}
-.top{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
-input,select,textarea{padding:9px 10px;border:1px solid var(--bd);border-radius:9px;background:var(--card);color:var(--tx);font:inherit;min-width:0}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:12px}
+.warn{border-color:var(--warn);font-size:.88rem}
+input,select,textarea{width:100%;padding:9px 10px;border:1px solid var(--bd);border-radius:9px;background:var(--bg);color:var(--tx);font:inherit;min-width:0}
+label{display:block;font-size:.82rem;color:var(--mu);margin-bottom:2px}
 button{font:inherit;cursor:pointer;border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:9px 13px;border-radius:9px}
 button.p{background:var(--ac);color:var(--ac2);border-color:var(--ac);font-weight:600}
-button.d{color:var(--bad)}
-.grid{display:grid;gap:12px;grid-template-columns:repeat(var(--cols,2),1fr)}
-@media(max-width:720px){.grid{grid-template-columns:1fr}}
-.cam{background:var(--card);border:1px solid var(--bd);border-radius:14px;overflow:hidden}
-.cam header{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:8px 10px}
-.cam header b{display:block;line-height:1.2}.cam header small{color:var(--mu)}
-.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--mu);margin-right:6px}
-.dot.ok{background:var(--ok)}.dot.err{background:var(--bad)}
-.vw{position:relative;aspect-ratio:16/9;background:var(--vid)}
-.vw video,.vw img,.vw iframe{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;border:0;background:var(--vid)}
-.ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;text-align:center;padding:12px;background:#000a;font-size:.9rem}
-.tools{display:flex;gap:6px;padding:8px 10px}
-.tools button{padding:4px 10px;font-size:.85rem}
-.empty{background:var(--card);border:1px dashed var(--bd);border-radius:14px;padding:22px;color:var(--mu)}
-.empty h2{margin:0 0 6px;color:var(--tx);font-size:1.1rem}.empty li{margin:4px 0}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.tabs{display:flex;gap:6px;margin-bottom:12px}
+.tabs button.on{background:var(--ac);color:var(--ac2);border-color:var(--ac)}
+.it{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--bd)}
+.it:last-child{border:0}
+.it b{display:block}.it small{color:var(--mu)}
+.tag{display:inline-block;font-size:.76rem;padding:1px 8px;border-radius:99px;border:1px solid var(--bd);margin-right:4px}
+.tag.on{color:var(--ok);border-color:var(--ok)}.tag.soon{color:var(--warn);border-color:var(--warn)}.tag.old{color:var(--mu)}
+.pv{display:flex;gap:6px;flex-wrap:wrap}
+.pv button{padding:4px 11px;font-size:.88rem;border-radius:99px}
+a{color:var(--ac)}
+.del{color:var(--bad);padding:3px 9px;font-size:.85rem}
+.empty{color:var(--mu);text-align:center;padding:22px}
 dialog{border:1px solid var(--bd);border-radius:14px;background:var(--card);color:var(--tx);width:min(560px,94vw);padding:16px}
 dialog::backdrop{background:#0008}
-.f{display:grid;gap:10px}.f label{font-size:.85rem;color:var(--mu);display:block;margin-bottom:2px}.f input,.f select,.f textarea{width:100%}
-.r{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
-.note{font-size:.82rem;color:var(--mu)}
 </style>
 </head>
 <body>
 <main>
-<h1>📹 ระบบดูกล้องวงจรปิด</h1>
-<p class="sub">รวมภาพสดจากกล้องที่คุณมีสิทธิ์เข้าถึง ใช้ได้กับ HLS, MJPEG, ภาพนิ่งรีเฟรชอัตโนมัติ, MP4 และลิงก์ฝัง (เช่น YouTube Live)</p>
-<div class="top">
- <button class="p" id="add">＋ เพิ่มกล้อง</button>
- <input id="q" placeholder="ค้นหาชื่อกล้อง / จุดติดตั้ง" style="flex:1;min-width:160px">
- <select id="zone" aria-label="กรองตามโซน"><option value="">ทุกโซน</option></select>
- <select id="cols" aria-label="จำนวนคอลัมน์"><option value="1">1 คอลัมน์</option><option value="2" selected>2 คอลัมน์</option><option value="3">3 คอลัมน์</option><option value="4">4 คอลัมน์</option></select>
- <button id="io">นำเข้า/ส่งออก</button>
-</div>
-<div id="grid" class="grid"></div>
-<div id="empty" class="empty" hidden>
- <h2>ยังไม่มีกล้องในระบบ</h2>
- <p>กด “เพิ่มกล้อง” แล้วใส่ที่อยู่สตรีมที่ได้รับอนุญาตจากหน่วยงานเจ้าของกล้อง เช่น ศูนย์ควบคุมของเทศบาล</p>
- <ul>
-  <li><b>HLS</b>: ลิงก์ลงท้าย <code>.m3u8</code> (ต้องเปิด CORS ที่เซิร์ฟเวอร์)</li>
-  <li><b>MJPEG / ภาพนิ่ง</b>: ลิงก์ภาพ เช่น <code>/snapshot.jpg</code> ตั้งเวลารีเฟรชได้</li>
-  <li><b>วิดีโอ</b>: ไฟล์ <code>.mp4</code> / <code>.webm</code></li>
-  <li><b>ฝังหน้าเว็บ</b>: YouTube Live หรือหน้าเล่นวิดีโอของระบบกล้อง</li>
- </ul>
-</div>
-<p class="note">ภาพจากกล้องเป็นข้อมูลส่วนบุคคลตาม พ.ร.บ.คุ้มครองข้อมูลส่วนบุคคล ใช้งานเฉพาะผู้ที่ได้รับอนุญาตเท่านั้น รายการกล้องเก็บในเบราว์เซอร์เครื่องนี้ ไม่ได้ส่งไปที่ใด</p>
+<h1>🚧 เช็คด่านตรวจ ตามประกาศทางการ</h1>
+<p class="sub">รวบรวมจุดตรวจที่หน่วยงานรัฐประกาศเผยแพร่แล้วเท่านั้น แยกตามจังหวัด พร้อมลิงก์ต้นทางและช่วงเวลา รายการที่หมดเวลาจะถูกซ่อนอัตโนมัติ</p>
+<div class="card warn">⚠️ ข้อมูลในแอปนี้มาจากที่ผู้ใช้กรอกจากประกาศทางการ ไม่ใช่ข้อมูลสดจากตำรวจ และอาจไม่ครบหรือเปลี่ยนแปลงได้ทุกเมื่อ จุดตรวจอาจตั้งเพิ่มโดยไม่ประกาศ แอปนี้มีไว้เพื่อให้ทราบและเตรียมเอกสารให้พร้อม ไม่ใช่เพื่อหลบเลี่ยงการตรวจ <b>เมาไม่ขับ</b></div>
+
+<div class="tabs"><button id="t1" class="on">ดูด่านตรวจ</button><button id="t2">เพิ่มประกาศ</button><button id="t3">สำรอง/นำเข้า</button></div>
+
+<section id="v1">
+ <div class="card">
+  <div class="g">
+   <div><label for="fp">จังหวัด</label><select id="fp"></select></div>
+   <div><label for="fq">ค้นหา (ถนน/อำเภอ/หมายเหตุ)</label><input id="fq" placeholder="เช่น ถนนมิตรภาพ"></div>
+  </div>
+  <div class="row" style="align-items:center"><label style="display:flex;gap:6px;align-items:center;margin:0"><input type="checkbox" id="fx" style="width:auto"> แสดงรายการที่หมดเวลาแล้วด้วย</label></div>
+  <div class="pv" id="pv" style="margin-top:10px"></div>
+ </div>
+ <div class="card"><div id="list"></div></div>
+</section>
+
+<section id="v2" hidden>
+ <form class="card" id="frm">
+  <div class="g">
+   <div><label for="p">จังหวัด *</label><select id="p" required></select></div>
+   <div><label for="d">อำเภอ / เขต</label><input id="d"></div>
+   <div style="grid-column:1/-1"><label for="l">ถนน / จุดตั้งด่าน *</label><input id="l" required placeholder="เช่น ถนนมิตรภาพ กม.215 หน้าปั๊ม…"></div>
+   <div><label for="s">เริ่ม *</label><input type="datetime-local" id="s" required></div>
+   <div><label for="e">สิ้นสุด *</label><input type="datetime-local" id="e" required></div>
+   <div><label for="st">ประเภทแหล่งที่มา *</label><select id="st"><option>เพจ/เว็บไซต์ตำรวจ</option><option>ประกาศจังหวัด/ศูนย์ ปภ.</option><option>ข่าวประชาสัมพันธ์ภาครัฐ</option><option>สื่อมวลชน</option><option>อื่น ๆ</option></select></div>
+   <div style="grid-column:1/-1"><label for="u">ลิงก์ประกาศต้นทาง * (ต้องเป็นแหล่งทางการ)</label><input type="url" id="u" required placeholder="https://…"></div>
+   <div style="grid-column:1/-1"><label for="n">หมายเหตุ (เช่น ด่านตรวจแอลกอฮอล์ ช่วงเทศกาล)</label><textarea id="n" style="min-height:56px"></textarea></div>
+  </div>
+  <div class="row"><button class="p">บันทึกประกาศ</button></div>
+  <div id="msg" class="sub" style="margin:8px 0 0"></div>
+ </form>
+</section>
+
+<section id="v3" hidden>
+ <div class="card">
+  <p class="sub">คัดลอกข้อความนี้เก็บเป็นข้อมูลสำรอง หรือวาง JSON จากเครื่องอื่นแล้วกด “นำเข้า” (ผสานกับรายการเดิม)</p>
+  <textarea id="ta" style="min-height:200px;font-family:monospace;font-size:.8rem"></textarea>
+  <div class="row"><button id="cp">คัดลอก</button><button class="p" id="im">นำเข้า</button><button class="del" id="pg">ลบรายการที่หมดเวลา</button></div>
+  <div id="m3" class="sub"></div>
+ </div>
+</section>
 </main>
-
-<dialog id="dlg"><form method="dialog" class="f" id="frm">
- <h2 style="margin:0" id="dt">เพิ่มกล้อง</h2>
- <div><label for="n">ชื่อกล้อง</label><input id="n" required placeholder="เช่น หน้าศาลากลาง"></div>
- <div><label for="z">โซน / ถนน</label><input id="z" placeholder="เช่น ถนนศรีสะเกษ" list="zl"><datalist id="zl"></datalist></div>
- <div><label for="t">ประเภท</label><select id="t"><option value="auto">ตรวจจับอัตโนมัติ</option><option value="hls">HLS (.m3u8)</option><option value="img">MJPEG / ภาพนิ่ง</option><option value="video">วิดีโอ MP4/WebM</option><option value="embed">ฝังหน้าเว็บ / YouTube</option></select></div>
- <div><label for="u">ที่อยู่สตรีม (URL)</label><input id="u" type="url" required placeholder="https://…"></div>
- <div><label for="rf">รีเฟรชภาพนิ่งทุก (วินาที) — เฉพาะแบบภาพนิ่ง</label><input id="rf" type="number" min="1" max="600" value="5"></div>
- <div class="r"><button type="button" id="cx">ยกเลิก</button><button class="p" id="ok" value="ok">บันทึก</button></div>
-</form></dialog>
-
-<dialog id="dio"><div class="f">
- <h2 style="margin:0">นำเข้า / ส่งออก</h2>
- <p class="note" style="margin:0">คัดลอกข้อความนี้เก็บไว้เพื่อสำรอง หรือวาง JSON ที่ได้จากเครื่องอื่นแล้วกด “นำเข้า” (รายการเดิมจะถูกแทนที่)</p>
- <textarea id="ta" style="min-height:200px;font-family:monospace;font-size:.82rem"></textarea>
- <div class="r"><button id="cp">คัดลอก</button><button id="im" class="p">นำเข้า</button><button id="ic">ปิด</button></div>
- <div class="note" id="im-msg"></div>
-</div></dialog>
-
-<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js"></script>
 <script>
 (function(){
 var $=function(i){return document.getElementById(i)};
-var KEY='cctv-viewer-v1',cams=[],editId=null,live={};
-function load(){try{var raw=localStorage.getItem(KEY);var r=JSON.parse(raw||'[]');cams=Array.isArray(r)?r:[];if(raw===null){cams=[{id:'ubon1',name:'ระบบกล้องวงจรปิด เทศบาลนครอุบลราชธานี',zone:'ศูนย์ควบคุม',type:'embed',url:'https://38.159.250.22/cctv24/?code=ZWRiMDI4ZmYtNGIyMC00ZTQyLTkzYTgtODdkOTI4YTkzN2U4I2JkMDgzYWJlLWFiNzMtNDY3MS05Yjk0LTFjY2E5NDk5NDI5ZA&state=2b1531d9e6aece286919546a3c9ef886',rf:5}];save()}}catch(e){cams=[]}
- try{var c=localStorage.getItem(KEY+'-cols');if(c)$('cols').value=c}catch(e){}}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(cams))}catch(e){}}
+var PV='กรุงเทพมหานคร,กระบี่,กาญจนบุรี,กาฬสินธุ์,กำแพงเพชร,ขอนแก่น,จันทบุรี,ฉะเชิงเทรา,ชลบุรี,ชัยนาท,ชัยภูมิ,ชุมพร,เชียงราย,เชียงใหม่,ตรัง,ตราด,ตาก,นครนายก,นครปฐม,นครพนม,นครราชสีมา,นครศรีธรรมราช,นครสวรรค์,นนทบุรี,นราธิวาส,น่าน,บึงกาฬ,บุรีรัมย์,ปทุมธานี,ประจวบคีรีขันธ์,ปราจีนบุรี,ปัตตานี,พระนครศรีอยุธยา,พังงา,พัทลุง,พิจิตร,พิษณุโลก,เพชรบุรี,เพชรบูรณ์,แพร่,พะเยา,ภูเก็ต,มหาสารคาม,มุกดาหาร,แม่ฮ่องสอน,ยะลา,ยโสธร,ร้อยเอ็ด,ระนอง,ระยอง,ราชบุรี,ลพบุรี,ลำปาง,ลำพูน,เลย,ศรีสะเกษ,สกลนคร,สงขลา,สตูล,สมุทรปราการ,สมุทรสงคราม,สมุทรสาคร,สระแก้ว,สระบุรี,สิงห์บุรี,สุโขทัย,สุพรรณบุรี,สุราษฎร์ธานี,สุรินทร์,หนองคาย,หนองบัวลำภู,อ่างทอง,อำนาจเจริญ,อุดรธานี,อุตรดิตถ์,อุทัยธานี,อุบลราชธานี'.split(',');
+var KEY='checkpoint-tracker-v1',data=[];
+function load(){try{var r=JSON.parse(localStorage.getItem(KEY)||'[]');data=Array.isArray(r)?r:[]}catch(e){data=[]}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(data));return true}catch(e){return false}}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
-function kind(c){
- if(c.type&&c.type!=='auto')return c.type;
- var u=c.url.toLowerCase();
- if(/\.m3u8(\?|$)/.test(u))return'hls';
- if(/youtube\.com|youtu\.be/.test(u))return'embed';
- if(/\.(mp4|webm|ogg)(\?|$)/.test(u))return'video';
- if(/\.(jpe?g|png|gif)(\?|$)|snapshot|mjpe?g|mjpeg|video\.cgi|stream\.cgi/.test(u))return'img';
- return'embed'}
-function ytEmbed(u){var m=u.match(/(?:youtu\.be\/|v=|\/live\/|\/embed\/)([\w-]{11})/);return m?'https://www.youtube.com/embed/'+m[1]+'?autoplay=1&mute=1':u}
-function stop(id){var l=live[id];if(!l)return;try{if(l.hls)l.hls.destroy()}catch(e){}if(l.timer)clearInterval(l.timer);if(l.retry)clearTimeout(l.retry);delete live[id]}
-function stopAll(){Object.keys(live).forEach(stop)}
-function status(id,ok,t){var d=document.querySelector('[data-dot="'+id+'"]'),o=document.querySelector('[data-ov="'+id+'"]');
- if(d)d.className='dot '+(ok?'ok':'err');
- if(o){if(ok)o.hidden=true;else{o.hidden=false;o.textContent=t||'ไม่สามารถเปิดภาพได้'}}}
-function mixed(u){return location.protocol==='https:'&&/^http:\/\//i.test(u)}
-function start(c){
- var vw=document.querySelector('[data-vw="'+c.id+'"]');if(!vw)return;
- var k=kind(c),L=live[c.id]={};
- if(mixed(c.url)){status(c.id,false,'ลิงก์เป็น http แต่หน้านี้เป็น https เบราว์เซอร์จึงบล็อก ใช้ลิงก์ https หรือเปิดไฟล์นี้จากเครื่องโดยตรง');return}
- if(k==='hls'){
-  var v=document.createElement('video');v.muted=true;v.autoplay=true;v.playsInline=true;v.controls=true;vw.insertBefore(v,vw.firstChild);
-  v.addEventListener('playing',function(){status(c.id,true)});
-  if(window.Hls&&Hls.isSupported()){
-   var h=new Hls({lowLatencyMode:true,liveSyncDurationCount:3});L.hls=h;h.loadSource(c.url);h.attachMedia(v);
-   h.on(Hls.Events.ERROR,function(_,d){if(!d.fatal)return;status(c.id,false,'เชื่อมต่อไม่ได้ กำลังลองใหม่…');
-    if(d.type===Hls.ErrorTypes.NETWORK_ERROR){L.retry=setTimeout(function(){try{h.startLoad()}catch(e){}},4000)}
-    else if(d.type===Hls.ErrorTypes.MEDIA_ERROR){try{h.recoverMediaError()}catch(e){}}
-    else{stop(c.id);L=live[c.id]={};L.retry=setTimeout(function(){render()},6000)}})}
-  else if(v.canPlayType('application/vnd.apple.mpegurl')){v.src=c.url;v.play().catch(function(){});v.onerror=function(){status(c.id,false)}}
-  else status(c.id,false,'เบราว์เซอร์นี้ไม่รองรับ HLS')}
- else if(k==='video'){
-  var v2=document.createElement('video');v2.muted=true;v2.autoplay=true;v2.playsInline=true;v2.controls=true;v2.loop=true;v2.src=c.url;vw.insertBefore(v2,vw.firstChild);
-  v2.addEventListener('playing',function(){status(c.id,true)});v2.addEventListener('error',function(){status(c.id,false)})}
- else if(k==='img'){
-  var im=document.createElement('img');im.alt=c.name;vw.insertBefore(im,vw.firstChild);
-  var sec=Math.max(1,+c.rf||5),isStream=/mjpe?g|mjpeg|video\.cgi|stream\.cgi/i.test(c.url)&&!/snapshot|\.jpe?g/i.test(c.url);
-  var load=function(){im.src=c.url+(c.url.indexOf('?')>-1?'&':'?')+'_t='+Date.now()};
-  im.onload=function(){status(c.id,true)};im.onerror=function(){status(c.id,false,'โหลดภาพไม่ได้ กำลังลองใหม่…')};
-  load();if(!isStream)L.timer=setInterval(load,sec*1000)}
- else{
-  var f=document.createElement('iframe');f.allow='autoplay; fullscreen';f.allowFullscreen=true;f.referrerPolicy='no-referrer';
-  f.src=/youtube|youtu\.be/.test(c.url)?ytEmbed(c.url):c.url;f.onload=function(){status(c.id,true)};vw.insertBefore(f,vw.firstChild)}}
-function filtered(){var q=$('q').value.trim().toLowerCase(),z=$('zone').value;
- return cams.filter(function(c){return(!z||c.zone===z)&&(!q||(c.name+' '+c.zone).toLowerCase().indexOf(q)>-1)})}
+function pad(n){return n<10?'0'+n:''+n}
+function nowL(){var d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes())}
+function fmt(s){var d=new Date(s);return isNaN(d)?s:d.toLocaleString('th-TH',{day:'numeric',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'})}
+function state(r){var n=nowL();return r.e<n?'old':r.s>n?'soon':'on'}
+var opts='<option value="">ทุกจังหวัด</option>'+PV.map(function(p){return'<option>'+p+'</option>'}).join('');
+$('fp').innerHTML=opts;$('p').innerHTML=PV.map(function(p){return'<option>'+p+'</option>'}).join('');
+function tab(n){['1','2','3'].forEach(function(i){$('v'+i).hidden=i!==n;$('t'+i).className=i===n?'on':''});if(n==='3'){$('ta').value=JSON.stringify(data,null,1);$('m3').textContent=''}}
+$('t1').onclick=function(){tab('1')};$('t2').onclick=function(){tab('2');if(!$('s').value){$('s').value=nowL()}};$('t3').onclick=function(){tab('3')};
 function render(){
- stopAll();var list=filtered();
- var zs=[];cams.forEach(function(c){if(c.zone&&zs.indexOf(c.zone)<0)zs.push(c.zone)});
- var cz=$('zone').value;$('zone').innerHTML='<option value="">ทุกโซน</option>'+zs.map(function(z){return'<option'+(z===cz?' selected':'')+'>'+esc(z)+'</option>'}).join('');
- $('zl').innerHTML=zs.map(function(z){return'<option value="'+esc(z)+'">'}).join('');
- $('grid').style.setProperty('--cols',$('cols').value);
- $('empty').hidden=cams.length>0;
- $('grid').innerHTML=list.map(function(c){return '<article class="cam"><header><div><b><span class="dot" data-dot="'+c.id+'"></span>'+esc(c.name)+'</b><small>'+esc(c.zone||'')+'</small></div></header><div class="vw" data-vw="'+c.id+'"><div class="ov" data-ov="'+c.id+'">กำลังเชื่อมต่อ…</div></div><div class="tools"><button data-a="fs" data-id="'+c.id+'">⛶ เต็มจอ</button><button data-a="rl" data-id="'+c.id+'">↻ โหลดใหม่</button><button data-a="ot" data-id="'+c.id+'">↗ เปิดแท็บใหม่</button><button data-a="ed" data-id="'+c.id+'">แก้ไข</button><button class="d" data-a="rm" data-id="'+c.id+'">ลบ</button></div></article>'}).join('');
- list.forEach(start)}
-$('grid').onclick=function(e){var a=e.target.getAttribute('data-a'),id=e.target.getAttribute('data-id');if(!a)return;
- var c=cams.filter(function(x){return x.id===id})[0];if(!c)return;
- if(a==='fs'){var vw=document.querySelector('[data-vw="'+id+'"]');var fn=vw.requestFullscreen||vw.webkitRequestFullscreen;if(fn)fn.call(vw)}
- else if(a==='rl'){stop(id);var vw2=document.querySelector('[data-vw="'+id+'"]');Array.prototype.slice.call(vw2.children).forEach(function(n){if(!n.classList.contains('ov'))n.remove()});status(id,false,'กำลังเชื่อมต่อ…');start(c)}
- else if(a==='ot')window.open(c.url,'_blank','noopener');else if(a==='ed')openDlg(c);
- else if(a==='rm'){if(confirm('ลบกล้อง “'+c.name+'” ?')){stop(id);cams=cams.filter(function(x){return x.id!==id});save();render()}}};
-function openDlg(c){editId=c?c.id:null;$('dt').textContent=c?'แก้ไขกล้อง':'เพิ่มกล้อง';
- $('n').value=c?c.name:'';$('z').value=c?c.zone||'':'';$('t').value=c?c.type||'auto':'auto';$('u').value=c?c.url:'';$('rf').value=c?c.rf||5:5;$('dlg').showModal()}
-$('add').onclick=function(){openDlg(null)};
-$('cx').onclick=function(){$('dlg').close()};
-$('frm').onsubmit=function(e){
- var u=$('u').value.trim();if(!/^https?:\/\//i.test(u)){e.preventDefault();alert('ที่อยู่ต้องขึ้นต้นด้วย http:// หรือ https://');return}
- var o={id:editId||Date.now().toString(36)+Math.random().toString(36).slice(2,6),name:$('n').value.trim(),zone:$('z').value.trim(),type:$('t').value,url:u,rf:+$('rf').value||5};
- if(editId){cams=cams.map(function(x){return x.id===editId?o:x})}else cams.push(o);
- save();render()};
-$('q').oninput=render;$('zone').onchange=render;
-$('cols').onchange=function(){try{localStorage.setItem(KEY+'-cols',this.value)}catch(e){}render()};
-$('io').onclick=function(){$('ta').value=JSON.stringify(cams,null,1);$('im-msg').textContent='';$('dio').showModal()};
-$('ic').onclick=function(){$('dio').close()};
-$('cp').onclick=function(){$('ta').select();try{navigator.clipboard.writeText($('ta').value).then(function(){$('im-msg').textContent='คัดลอกแล้ว ✓'})}catch(e){document.execCommand('copy');$('im-msg').textContent='คัดลอกแล้ว ✓'}};
-$('im').onclick=function(){try{var r=JSON.parse($('ta').value);if(!Array.isArray(r))throw 0;
- r=r.filter(function(c){return c&&c.name&&/^https?:\/\//i.test(c.url||'')}).map(function(c){return{id:c.id||Date.now().toString(36)+Math.random().toString(36).slice(2,6),name:String(c.name),zone:String(c.zone||''),type:c.type||'auto',url:String(c.url),rf:+c.rf||5}});
- if(!confirm('แทนที่รายการเดิมด้วยกล้อง '+r.length+' ตัว?'))return;cams=r;save();render();$('dio').close()}catch(e){$('im-msg').textContent='รูปแบบ JSON ไม่ถูกต้อง'}};
-document.addEventListener('visibilitychange',function(){if(!document.hidden&&cams.length)render()});
-load();render();
+ var p=$('fp').value,q=$('fq').value.trim().toLowerCase(),x=$('fx').checked;
+ var act=data.filter(function(r){return r.e>=nowL()}),cnt={};act.forEach(function(r){cnt[r.p]=(cnt[r.p]||0)+1});
+ var ps=Object.keys(cnt).sort();
+ $('pv').innerHTML=ps.length?ps.map(function(k){return'<button data-p="'+esc(k)+'">'+esc(k)+' ('+cnt[k]+')</button>'}).join(''):'<span class="sub">ยังไม่มีประกาศที่ยังมีผล</span>';
+ var l=data.filter(function(r){return(!p||r.p===p)&&(x||r.e>=nowL())&&(!q||(r.l+' '+r.d+' '+r.n).toLowerCase().indexOf(q)>-1)}).sort(function(a,b){return a.s<b.s?-1:1});
+ $('list').innerHTML=l.length?l.map(function(r){var s=state(r),tg={on:'กำลังมีผล',soon:'ยังไม่เริ่ม',old:'หมดเวลา'}[s];
+  return'<div class="it"><div><span class="tag '+s+'">'+tg+'</span><b>'+esc(r.l)+'</b><small>'+esc(r.p)+(r.d?' · '+esc(r.d):'')+'</small><br><small>'+esc(fmt(r.s))+' – '+esc(fmt(r.e))+'</small>'+(r.n?'<br><small>'+esc(r.n)+'</small>':'')+'<br><small>แหล่งที่มา: <a href="'+esc(r.u)+'" target="_blank" rel="noopener noreferrer">'+esc(r.st)+'</a> · <a href="https://www.google.com/maps/search/'+encodeURIComponent(r.l+' '+r.p)+'" target="_blank" rel="noopener noreferrer">ดูแผนที่</a></small></div><button class="del" data-id="'+r.id+'">ลบ</button></div>'}).join(''):'<div class="empty">ไม่พบประกาศที่ตรงเงื่อนไข ไปที่แท็บ “เพิ่มประกาศ” เพื่อบันทึกข้อมูลจากแหล่งทางการ</div>'}
+$('pv').onclick=function(e){var p=e.target.getAttribute('data-p');if(p){$('fp').value=p;render()}};
+$('list').onclick=function(e){var id=e.target.getAttribute('data-id');if(id&&confirm('ลบรายการนี้?')){data=data.filter(function(r){return r.id!==id});save();render()}};
+$('fp').onchange=$('fq').oninput=$('fx').onchange=render;
+$('frm').onsubmit=function(ev){ev.preventDefault();
+ var u=$('u').value.trim();if(!/^https?:\/\//i.test(u)){$('msg').textContent='ลิงก์ต้นทางไม่ถูกต้อง';return}
+ if($('e').value<=$('s').value){$('msg').textContent='เวลาสิ้นสุดต้องหลังเวลาเริ่ม';return}
+ data.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),p:$('p').value,d:$('d').value.trim(),l:$('l').value.trim(),s:$('s').value,e:$('e').value,st:$('st').value,u:u,n:$('n').value.trim()});
+ var ok=save();$('msg').textContent=ok?'บันทึกแล้ว ✓':'บันทึกลงเครื่องไม่ได้ กรุณาสำรองข้อมูลในแท็บสำรอง/นำเข้า';
+ $('l').value='';$('d').value='';$('n').value='';$('u').value='';render()};
+$('cp').onclick=function(){$('ta').select();try{navigator.clipboard.writeText($('ta').value).then(function(){$('m3').textContent='คัดลอกแล้ว ✓'})}catch(e){document.execCommand('copy');$('m3').textContent='คัดลอกแล้ว ✓'}};
+$('im').onclick=function(){try{var r=JSON.parse($('ta').value);if(!Array.isArray(r))throw 0;var ids={};data.forEach(function(x){ids[x.id]=1});var n=0;
+ r.forEach(function(c){if(c&&c.p&&c.l&&c.s&&c.e&&/^https?:\/\//i.test(c.u||'')&&!ids[c.id]){data.push({id:c.id||Date.now().toString(36)+n,p:String(c.p),d:String(c.d||''),l:String(c.l),s:String(c.s),e:String(c.e),st:String(c.st||'อื่น ๆ'),u:String(c.u),n:String(c.n||'')});n++}});
+ save();render();$('m3').textContent='นำเข้า '+n+' รายการ'}catch(e){$('m3').textContent='รูปแบบ JSON ไม่ถูกต้อง'}};
+$('pg').onclick=function(){var k=data.filter(function(r){return r.e<nowL()}).length;if(!k){$('m3').textContent='ไม่มีรายการที่หมดเวลา';return}if(confirm('ลบ '+k+' รายการที่หมดเวลาแล้ว?')){data=data.filter(function(r){return r.e>=nowL()});save();render();$('ta').value=JSON.stringify(data,null,1);$('m3').textContent='ลบแล้ว'}};
+load();render();setInterval(render,60000);
 })();
 </script>
 </body>
