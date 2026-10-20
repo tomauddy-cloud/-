@@ -1,869 +1,130 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8" />
-<title>ระบบสำรวจสัตว์ งานสัตวแพทย์</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>แอปดูสภาพอากาศ</title>
 <style>
-body { font-family: "Sarabun", Arial, sans-serif; background:#f4f6fb; margin:0; }
-header { background:#fff; padding:20px; text-align:center; border-bottom:4px solid #2c3e90; }
-main { max-width:900px; margin:30px auto; background:#fff; padding:30px; border-radius:10px; box-shadow:0 6px 15px rgba(0,0,0,.1); }
-.center-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:15px; }
-.center-card { border:1px solid #ddd; border-radius:8px; padding:15px; text-align:center; background:#f9fafc; }
-.center-card button { margin-top:10px; padding:10px 18px; background:#2c3e90; color:#fff; border:none; border-radius:6px; cursor:pointer; }
-label { display:block; margin-top:10px; }
-input, select { width:100%; padding:6px; margin-top:4px; }
-.pet-card { border:1px solid #ccc; padding:10px; margin-top:10px; border-radius:6px; }
-footer { text-align:center; padding:15px; color:#666; font-size:14px; }
+:root{--bg:#eaf2fb;--card:#ffffffd9;--tx:#13202f;--mu:#5b6b7f;--bd:#d5e0ee;--ac:#1f6feb;--ac2:#fff;--bad:#c93c37;--hero:linear-gradient(160deg,#4aa3ff,#1f6feb)}
+@media(prefers-color-scheme:dark){:root{--bg:#0d141d;--card:#17212cd9;--tx:#e8eef6;--mu:#9aa8ba;--bd:#2a3645;--ac:#58a6ff;--ac2:#0b1320;--bad:#ff7b72;--hero:linear-gradient(160deg,#1b4a86,#12294d);color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 'Sarabun','Noto Sans Thai',system-ui,sans-serif;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+main{max-width:760px;margin:0 auto;padding:14px}
+.bar{display:flex;gap:8px;position:relative}
+input{flex:1;padding:11px 12px;border:1px solid var(--bd);border-radius:11px;background:var(--card);color:var(--tx);font:inherit;min-width:0}
+button{font:inherit;cursor:pointer;border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:10px 13px;border-radius:11px}
+button.p{background:var(--ac);color:var(--ac2);border-color:var(--ac);font-weight:600}
+#sug{position:absolute;top:48px;left:0;right:100px;background:var(--bg);border:1px solid var(--bd);border-radius:11px;z-index:5;overflow:hidden;box-shadow:0 8px 24px #0003}
+#sug button{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid var(--bd);border-radius:0;background:transparent}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.chip{padding:5px 11px;border-radius:99px;font-size:.88rem}
+.hero{background:var(--hero);color:#fff;border-radius:20px;padding:20px;margin:6px 0 12px}
+.hero .loc{font-size:1.15rem;font-weight:600;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.hero .big{display:flex;align-items:center;gap:10px;margin:6px 0}
+.hero .t{font-size:4rem;font-weight:700;line-height:1}
+.hero .ic{font-size:3.6rem}
+.hero small{opacity:.9}
+.star{background:#fff3;border-color:#fff4;color:#fff;padding:4px 10px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:14px;margin-bottom:12px;backdrop-filter:blur(6px)}
+.card h2{font-size:1rem;margin:0 0 10px;color:var(--mu);font-weight:600}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.m{background:#8881;border-radius:11px;padding:9px 11px}.m span{display:block;font-size:.8rem;color:var(--mu)}.m b{font-size:1.12rem}
+.hr{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px}
+.h{min-width:64px;text-align:center;font-size:.88rem}.h .i{font-size:1.5rem}.h .r{color:var(--ac);font-size:.78rem;min-height:1.1em}
+.d{display:grid;grid-template-columns:70px 34px 1fr auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--bd);font-size:.95rem}
+.d:last-child{border:0}
+.bar2{height:6px;border-radius:9px;background:#8883;position:relative}.bar2 i{position:absolute;top:0;bottom:0;border-radius:9px;background:linear-gradient(90deg,#4aa3ff,#ff9f43)}
+#st{text-align:center;color:var(--mu);padding:30px 10px}#st.e{color:var(--bad)}
+.foot{font-size:.78rem;color:var(--mu);text-align:center;margin:14px 0}
+.u{display:flex;gap:6px;justify-content:flex-end;margin-bottom:6px}
+.u button{padding:4px 10px;font-size:.85rem}.u .on{background:var(--ac);color:var(--ac2);border-color:var(--ac)}
 </style>
 </head>
 <body>
-<header>
-  <div style="display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap;">
-    
-    <div style="text-align:center;">
-      <div style="border-bottom:2px solid #2c3e90; padding-bottom:10px; margin-bottom:10px;">
-        <h1 style="margin:0;font-size:26px;">เทศบาลนครอุบลราชธานี</h1>
-        <h2 style="margin:5px 0 0;font-size:20px;font-weight:normal;">กองสาธารณสุขและสิ่งแวดล้อม ฝ่ายบริการสาธารณสุข</h2>
-      </div>
-      <div>
-        <h3 style="margin:5px 0 0;font-size:18px;">งานสัตวแพทย์</h3>
-        <p style="margin:0;font-size:16px;">แบบสำรวจสัตว์ ประจำปีงบประมาณ 2569</p>
-      </div>
-    </div>
-  </div>
-</header>
-
 <main>
-<h2 style="text-align:center">เลือกศูนย์บริการสาธารณสุขตามสถานที่อยู่เจ้าของสัตว์</h2>
-<div class="center-list">
-  <div class="center-card">ศูนย์บริการสาธารณสุขศูนย์ที่ 1<br><button type="button" onclick="openForm(1)">กดเริ่มสำรวจเพื่อกรอกข้อมูลด้านล่าง</button></div>
-  <div class="center-card">ศูนย์บริการสาธารณสุขศูนย์ที่ 2<br><button type="button" onclick="openForm(2)">กดเริ่มสำรวจเพื่อกรอกข้อมูลด้านล่าง</button></div>
-  <div class="center-card">ศูนย์บริการสาธารณสุขศูนย์ที่ 3<br><button type="button" onclick="openForm(3)">กดเริ่มสำรวจเพื่อกรอกข้อมูลด้านล่าง</button></div>
-  <div class="center-card">ศูนย์บริการสาธารณสุขศูนย์ที่ 4<br><button type="button" onclick="openForm(4)">กดเริ่มสำรวจเพื่อกรอกข้อมูลด้านล่าง</button></div>
-  <div class="center-card">ศูนย์บริการสาธารณสุขศูนย์ที่ 5<br><button type="button" onclick="openForm(5)">กดเริ่มสำรวจเพื่อกรอกข้อมูลด้านล่าง</button></div>
-  <div class="center-card">ศูนย์บริการสาธารณสุขศูนย์ที่ 6<br><button type="button" onclick="openForm(6)">กดเริ่มสำรวจเพื่อกรอกข้อมูลด้านล่าง</button></div>
-  <div class="center-card">ศูนย์บริการสาธารณสุขศูนย์ที่ 7<br><button type="button" onclick="openForm(7)">กดเริ่มสำรวจเพื่อกรอกข้อมูลด้านล่าง</button></div>
+<div class="bar">
+ <input id="q" placeholder="ค้นหาเมือง เช่น เชียงใหม่, ภูเก็ต, Tokyo" autocomplete="off" aria-label="ค้นหาเมือง">
+ <button id="gps" title="ตำแหน่งปัจจุบัน" aria-label="ตำแหน่งปัจจุบัน">📍</button>
+ <div id="sug" hidden></div>
 </div>
-
-<div id="formSection" style="display:none; margin-top:40px;">
-<h2>แบบฟอร์มสำรวจสัตว์</h2>
-<p id="centerLabel" style="font-weight:bold;color:#2c3e90"></p>
-<form id="surveyForm">
-<input type="hidden" id="centerId"><input type="hidden" id="centerName">
-
-<label>ปีงบประมาณ</label>
-<input type="number" id="year" value="2569" required>
-
-<label>ชุมชน</label>
-<input type="text" id="community" placeholder="กรอกชื่อชุมชน" required>
-
-<label>ประเภทสัตว์</label>
-<select id="animalType" required>
-  <option value="">-- เลือก --</option>
-  <option>ไม่มี</option>
-  <option>สุนัข</option><option>แมว</option><option>โค</option><option>เป็ด</option><option>ไก่</option><option>สุกร</option><option>นก</option><option>แพะ</option><option>ม้า</option><option>อื่น ๆ</option>
-</select>
-
-<label>จำนวนสัตว์เลี้ยง</label>
-<input type="number" id="petQty" min="0" max="100" value="0">
-<div id="petList"></div>
-
-<h3>ข้อมูลผู้บันทึก</h3>
-<label>ชื่อเจ้าของสัตว์เลี้ยง</label>
-<input type="text" id="recorderName">
-
-<label>หมายเลขบัตรประชาชน เจ้าของสัตว์เลี้ยง (13 หลัก)</label>
-<input type="text" id="citizenId" maxlength="13" minlength="13" pattern="\d{13}" required>
-
-<label>บ้านเลขที่ เจ้าของสัตว์เลี้ยง</label><input id="addrNo">
-<label>ถนน</label><input id="road">
-<label>ซอย</label><input id="soi">
-<label>ตำบล</label><input id="subdistrict">
-<label>อำเภอ</label><input id="district">
-<label>จังหวัด</label><input id="province">
-
-<label>เบอร์โทรศัพท์</label>
-<input type="text" id="phone">
-
-<button type="submit" style="margin-top:15px;padding:10px 20px;background:#2c3e90;color:#fff;border:none;border-radius:6px;">บันทึกข้อมูล</button>
-</form>
-<p id="status" style="margin-top:15px;"></p>
+<div class="chips" id="favs"></div>
+<div class="u"><button id="uc" class="on">°C</button><button id="uf">°F</button></div>
+<div id="st">กำลังโหลด…</div>
+<div id="app" hidden>
+ <div class="hero">
+  <div class="loc"><span id="name"></span><button class="star" id="fav" aria-label="บันทึกเมือง">☆</button></div>
+  <div class="big"><div class="ic" id="ic"></div><div class="t" id="t"></div></div>
+  <div id="desc"></div><small id="hl"></small>
+ </div>
+ <div class="card"><h2>รายละเอียดตอนนี้</h2><div class="g" id="det"></div></div>
+ <div class="card"><h2>รายชั่วโมง (24 ชม. ข้างหน้า)</h2><div class="hr" id="hr"></div></div>
+ <div class="card"><h2>พยากรณ์ 7 วัน</h2><div id="dy"></div></div>
+ <div class="card"><h2>คุณภาพอากาศ</h2><div class="g" id="aq"></div></div>
+ <div class="foot" id="upd"></div>
 </div>
+<div class="foot">ข้อมูลจาก Open-Meteo.com (CC BY 4.0)</div>
 </main>
-
-<footer>© เทศบาลนครอุบลราชธานี | กองสาธารณสุขและสิ่งแวดล้อม งานสัตวแพทย์ 045-246060 ต่อ 180 280</footer>
-
 <script>
-function openForm(center) {
-  const names = {
-    1:'ศูนย์บริการสาธารณสุขศูนย์ที่ 1',
-    2:'ศูนย์บริการสาธารณสุขศูนย์ที่ 2',
-    3:'ศูนย์บริการสาธารณสุขศูนย์ที่ 3',
-    4:'ศูนย์บริการสาธารณสุขศูนย์ที่ 4',
-    5:'ศูนย์บริการสาธารณสุขศูนย์ที่ 5',
-    6:'ศูนย์บริการสาธารณสุขศูนย์ที่ 6',
-    7:'ศูนย์บริการสาธารณสุขศูนย์ที่ 7'
-  };
-
-  document.getElementById('formSection').style.display = 'block';
-
-  // เก็บเลขศูนย์
-  document.getElementById('centerId').value = center;
-    updateCommunityByCenter(center);
-
-  // ⭐ เก็บชื่อศูนย์ตัวจริง (หัวใจของการแยก Sheet)
-  document.getElementById('centerName').value = names[center];
-
-  // แสดงผลบนหน้าเว็บ
-  document.getElementById('centerLabel').innerText =
-    'ศูนย์ที่กำลังบันทึกข้อมูล: ' + names[center];
-}
-
-const petQtyInput = document.getElementById('petQty');
-const petList = document.getElementById('petList');
-petQtyInput.addEventListener('input', syncPetList);
-
-function syncPetList() {
-  const qty = parseInt(petQtyInput.value||0);
-
-  // บังคับกรอกชื่อเจ้าของสัตว์เลี้ยงเมื่อมีสัตว์
-  const ownerInput = document.getElementById('recorderName');
-  if(qty > 0){
-    ownerInput.required = true;
-    ownerInput.placeholder = 'กรุณากรอกชื่อเจ้าของสัตว์เลี้ยง';
-  }else{
-    ownerInput.required = false;
-    ownerInput.placeholder = '';
-  }
-
-  while (petList.children.length < qty) petList.appendChild(createPetCard(petList.children.length+1));
-  while (petList.children.length > qty) petList.removeChild(petList.lastChild);
-}
-
-function toggleRabiesDate(selectEl){
-  const card = selectEl.closest('.pet-card');
-  const dateInput = card.querySelector('.rabiesDate');
-  if(selectEl.value === 'เคยฉีดวัคซีนพิษสุนัขบ้า'){
-    dateInput.style.display = 'block';
-    dateInput.required = true;
-  }else{
-    dateInput.style.display = 'none';
-    dateInput.required = false;
-    dateInput.value = '';
-  }
-}
-
-function toggleContraceptiveDate(sel){
-  const card = sel.closest('.pet-card');
-  const date = card.querySelector('.contraceptiveDate');
-  if(sel.value==='ฉีดยาคุม'){ date.style.display='block'; date.required=true; }
-  else { date.style.display='none'; date.required=false; date.value=''; }
-}
-
-function createPetCard(no) {
-  const d=document.createElement('div');
-  d.className='pet-card';
-  d.innerHTML=`<strong>สัตว์ตัวที่ ${no}</strong>
-    <input class="petName" placeholder="ชื่อสัตว์">
-    <select class="gender"><option>ผู้</option><option>เมีย</option><option>ไม่ระบุ</option></select>
-    <input type="number" class="ageYear" placeholder="อายุ (ปี)" min="0">
-    <input type="number" class="ageMonth" placeholder="อายุ (เดือน)" min="0" max="11">
-    <input class="color" placeholder="สี / ตำหนิ">
-    <select class="sterilization" onchange="toggleContraceptiveDate(this)"><option>ยังไม่ทำหมัน</option><option>ทำหมันแล้ว</option><option>ฉีดยาคุม</option></select>
-    <input type="date" class="contraceptiveDate" style="display:none">
-    <select class="rabies" onchange="toggleRabiesDate(this)"><option>ไม่เคยฉีดวัคซีนพิษสุนัขบ้า</option><option>เคยฉีดวัคซีนพิษสุนัขบ้า</option></select>
-    <input type="date" class="rabiesDate" style="display:none" placeholder="วันที่ฉีดวัคซีนพิษสุนัขบ้าล่าสุด">
-    <select class="raising"><option>เลี้ยงในพื้นที่จำกัดตลอดเวลา</option><option>เลี้ยงในพื้นที่จำกัดบางเวลา</option><option>เลี้ยงแบบปล่อยตลอดเวลา</option></select>
-    <select class="location"><option>บ้านพักอาศัย</option><option>สถานที่ราชการ</option><option>วัด</option><option>ตลาด</option><option>บริเวณหมู่บ้าน</option><option>สถานที่เอกชน</option></select>`;
-  return d;
-}
-
- </script>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-
-  // หา input ผู้บันทึกข้อมูล (ใช้เป็นจุดอ้างอิงในการแทรก)
-  const recorderInput = document.getElementById('recorderName');
-  if (!recorderInput) return;
-
-  /* ===== label สัตวแพทย์ผู้ฉีด ===== */
-  const vetLabel = document.createElement('label');
-  vetLabel.textContent = 'สัตวแพทย์ผู้ฉีด';
-
-  /* ===== select สัตวแพทย์ผู้ฉีด ===== */
-  const vetSelect = document.createElement('select');
-  vetSelect.id = 'vetProvider';
-  vetSelect.required = true;
-  vetSelect.innerHTML = `
-    <option value="">-- เลือก --</option>
-    <option value="เทศบาลนครอุบลราชธานี/งานสัตวแพทย์">เทศบาลนครอุบลราชธานี / งานสัตวแพทย์</option>
-    <option value="คลินิก/โรงพยาบาลสัตว์">คลินิก / โรงพยาบาลสัตว์</option>
-    <option value="อาสาปศุสัตว์ที่ได้รับแต่งตั้ง">อาสาปศุสัตว์ที่ได้รับแต่งตั้ง</option>
-    <option value="คนรู้จัก">คนรู้จัก</option>
-    <option value="ฉีดเอง">ฉีดเอง</option>
-    <option value="อื่นๆ">อื่น ๆ</option>
-  `;
-
-  /* ===== ช่องกรอกชื่อเพิ่มเติม (ซ่อนเริ่มต้น) ===== */
-  const vetOtherInput = document.createElement('input');
-  vetOtherInput.type = 'text';
-  vetOtherInput.id = 'vetProviderOther';
-  vetOtherInput.placeholder = 'ระบุชื่อสัตวแพทย์ / ผู้ฉีด';
-  vetOtherInput.style.display = 'none';
-
-  /* ===== การแสดง/ซ่อนช่องกรอกชื่อ ===== */
-  vetSelect.addEventListener('change', function () {
-    if (this.value === 'อื่นๆ') {
-      vetOtherInput.style.display = 'block';
-      vetOtherInput.required = true;
-    } else {
-      vetOtherInput.style.display = 'none';
-      vetOtherInput.required = false;
-      vetOtherInput.value = '';
-    }
-  });
-
-  /* ===== แทรกลงในฟอร์ม ===== */
-  recorderInput.insertAdjacentElement('afterend', vetOtherInput);
-  recorderInput.insertAdjacentElement('afterend', vetSelect);
-  recorderInput.insertAdjacentElement('afterend', vetLabel);
-
-});
-</script>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-
-  /* 1) เปลี่ยนชื่อ label */
-  document.querySelectorAll('label').forEach(label => {
-    if (label.textContent.trim() === 'ชื่อเจ้าของสัตว์เลี้ยง') {
-      label.textContent = 'ผู้บันทึกข้อมูล / ผู้สำรวจข้อมูล';
-    }
-  });
-
-  /* 2) เพิ่มช่องตำแหน่ง */
-  const recorderInput = document.getElementById('recorderName');
-  const phoneInput = document.getElementById('phone');
-
-  if (recorderInput) {
-    const roleLabel = document.createElement('label');
-    roleLabel.textContent = 'ตำแหน่ง';
-
-    const roleSelect = document.createElement('select');
-    roleSelect.id = 'recorderRole';
-    roleSelect.required = true;
-    roleSelect.innerHTML = `
-      <option value="">-- เลือกตำแหน่ง --</option>
-      <option>เจ้าของสัตว์เลี้ยง</option>
-      <option>อสม.</option>
-    `;
-
-    recorderInput.insertAdjacentElement('afterend', roleSelect);
-    roleSelect.insertAdjacentElement('beforebegin', roleLabel);
-
-    /* 3) ถ้าเลือก อสม. ต้องกรอกเบอร์โทร */
-    roleSelect.addEventListener('change', function () {
-      if (!phoneInput) return;
-
-      if (this.value === 'อสม.') {
-        phoneInput.required = true;
-        phoneInput.placeholder = 'กรุณากรอกเบอร์โทรศัพท์ (อสม.)';
-      } else {
-        phoneInput.required = false;
-        phoneInput.placeholder = '';
-      }
-    });
-  }
-
-});
-</script>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-
-  const citizenInput = document.getElementById('citizenId');
-  if (!citizenInput) return;
-
-  /* ไล่ย้อนขึ้นไปลบ label + select + input ที่เป็นช่องสัตวแพทย์ผู้ฉีด */
-  let el = citizenInput.previousElementSibling;
-
-  while (el) {
-    // 
-    if (el.tagName === 'LABEL' && el.textContent.includes('สัตวแพทย์ผู้ฉีด')) {
-      const select = el.nextElementSibling;
-      const otherInput = select && select.nextElementSibling;
-
-      if (select && select.tagName === 'SELECT') select.remove();
-      if (otherInput && otherInput.tagName === 'INPUT') otherInput.remove();
-
-      el.remove();
-      break;
-    }
-
-    el = el.previousElementSibling;
-  }
-
-});
-</script>
-<script>
-document.addEventListener('change', function (e) {
-
-  /* ---------- กรณี ฉีดยาคุม ---------- */
-  if (e.target.classList.contains('sterilization')) {
-    const card = e.target.closest('.pet-card');
-    let box = card.querySelector('.contraceptiveVetBox');
-
-    if (e.target.value === 'ฉีดยาคุม') {
-      if (!box) {
-        box = createVetBox('สัตวแพทย์ผู้ฉีดยาคุม');
-        box.classList.add('contraceptiveVetBox');
-        e.target.insertAdjacentElement('afterend', box);
-      }
-      box.style.display = 'block';
-    } else {
-      if (box) box.style.display = 'none';
-    }
-  }
-
-  /* ---------- กรณี วัคซีนพิษสุนัขบ้า ---------- */
-  if (e.target.classList.contains('rabies')) {
-    const card = e.target.closest('.pet-card');
-    let box = card.querySelector('.rabiesVetBox');
-
-    if (e.target.value === 'เคยฉีดวัคซีนพิษสุนัขบ้า') {
-      if (!box) {
-        box = createVetBox('สัตวแพทย์ผู้ฉีดวัคซีนพิษสุนัขบ้า');
-        box.classList.add('rabiesVetBox');
-        e.target.insertAdjacentElement('afterend', box);
-      }
-      box.style.display = 'block';
-    } else {
-      if (box) box.style.display = 'none';
-    }
-  }
-
-});
-
-/* ---------- ฟังก์ชันสร้างช่องสัตวแพทย์ผู้ฉีด ---------- */
-function createVetBox(labelText) {
-  const wrap = document.createElement('div');
-  wrap.style.marginTop = '6px';
-
-  wrap.innerHTML = `
-    <label>${labelText}</label>
-    <select class="vetSource">
-      <option value="">-- เลือก --</option>
-      <option>เทศบาลนครอุบลราชธานี / งานสัตวแพทย์</option>
-      <option>คลินิก / โรงพยาบาลสัตว์</option>
-      <option>อาสาปศุสัตว์ที่ได้รับแต่งตั้ง</option>
-      <option>คนรู้จัก</option>
-      <option>ฉีดเอง</option>
-      <option>อื่นๆ</option>
-    </select>
-    <input type="text" class="vetName" placeholder="กรอกชื่อสัตวแพทย์ / ผู้ฉีด" style="display:none">
-  `;
-
-  const select = wrap.querySelector('.vetSource');
-  const input = wrap.querySelector('.vetName');
-
-  select.addEventListener('change', function () {
-    if (this.value === 'อื่นๆ') {
-      input.style.display = 'block';
-      input.required = true;
-    } else {
-      input.style.display = 'none';
-      input.required = false;
-      input.value = '';
-    }
-  });
-
-  return wrap;
-}
-</script>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-
-  const roleSelect = document.getElementById('recorderRole');
-  const phoneInput = document.getElementById('phone');
-  const centerIdInput = document.getElementById('centerId');
-
-  if (!roleSelect) return;
-
-  /* ล้าง option เดิม แล้วสร้างใหม่ */
-  roleSelect.innerHTML = `
-    <option value="">-- เลือกตำแหน่ง --</option>
-    <option>เจ้าของสัตว์เลี้ยง</option>
-  `;
-
-  /* เพิ่ม อสม. ตามศูนย์ 1 - 7 */
-  for (let i = 1; i <= 7; i++) {
-    const opt = document.createElement('option');
-    opt.value = `อสม.ศูนย์บริการสาธารณสุขศูนย์ที่ ${i}`;
-    opt.textContent = `อสม.ศูนย์บริการสาธารณสุขศูนย์ที่ ${i}`;
-    roleSelect.appendChild(opt);
-  }
-
-  /* เงื่อนไข: ถ้าเลือก อสม. ต้องกรอกเบอร์โทร */
-  roleSelect.addEventListener('change', function () {
-    if (!phoneInput) return;
-
-    if (this.value.startsWith('อสม.ศูนย์บริการสาธารณสุข')) {
-      phoneInput.required = true;
-      phoneInput.placeholder = 'กรุณากรอกเบอร์โทรศัพท์ (อสม.)';
-    } else {
-      phoneInput.required = false;
-      phoneInput.placeholder = '';
-    }
-  });
-
-});
-</script>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-
-  const phoneInput = document.getElementById('phone');
-  if (!phoneInput) return;
-
-  /* สร้าง label */
-  const placeLabel = document.createElement('label');
-  placeLabel.textContent = 'สถานที่เลี้ยง';
-
-  /* สร้าง select */
-  const placeSelect = document.createElement('select');
-  placeSelect.id = 'raisingPlace';
-  placeSelect.innerHTML = `
-  <option value="">-- เลือกพื้นที่การเลี้ยง --</option>
-  <option value="ไม่มี">ไม่มี</option>
-  <option>สถานที่เดียวกับเจ้าของสัตว์</option>
-  <option>ไม่ใช่สถานที่เดียวกับเจ้าของสัตว์</option>
-`;
-
-placeSelect.required = false;
-
-  /* แทรกใต้ช่องเบอร์โทร */
-  phoneInput.insertAdjacentElement('afterend', placeSelect);
-  placeSelect.insertAdjacentElement('beforebegin', placeLabel);
-
-});
-</script>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-
-  const citizenInput = document.getElementById('citizenId');
-  if (!citizenInput) return;
-
-  /* ป้องกันการสร้างซ้ำ */
-  if (document.getElementById('ownerInfoTitle')) return;
-
-  const ownerTitle = document.createElement('h3');
-  ownerTitle.id = 'ownerInfoTitle';
-  ownerTitle.textContent = 'ข้อมูลเจ้าของสัตว์';
-
-  /* ตั้งค่าสีเป็นสีดำ */
-  ownerTitle.style.marginTop = '20px';
-  ownerTitle.style.color = '#000';
-
-  const citizenLabel = citizenInput.previousElementSibling;
-  if (citizenLabel && citizenLabel.tagName === 'LABEL') {
-    citizenLabel.insertAdjacentElement('beforebegin', ownerTitle);
-  }
-
-});
-</script>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-
-  const header = document.querySelector('header');
-  if (!header) return;
-
-  /* เพิ่ม style responsive */
-  const style = document.createElement('style');
-  style.textContent = `
-    @media (max-width: 600px) {
-
-      header {
-        padding: 15px 10px;
-      }
-
-      header h1 {
-        font-size: 20px !important;
-      }
-
-      header h2 {
-        font-size: 16px !important;
-      }
-
-      header h3 {
-        font-size: 16px !important;
-      }
-
-      header p {
-        font-size: 14px !important;
-      }
-
-    }
-  `;
-  document.head.appendChild(style);
-
-});
-</script>
-<script>
-(function () {
-
-  const GAS_URL = "https://script.google.com/macros/s/AKfycbxVzfMbIPR9x74iyI8eXZI8nZRYzMeGE-n1DiytGqm9yPcCHpQbaIjYaCcPaj2K7H-g/exec";
-
-  const form = document.getElementById('surveyForm');
-  if (!form) return;
-
-  form.addEventListener('submit', async function (e) {
-    e.preventDefault();
-
-    /* ---------- สัตว์ ---------- */
-    let pets = [];
-    if (document.getElementById('animalType').value !== 'ไม่มี') {
-      pets = [...document.querySelectorAll('.pet-card')].map((card, i) => {
-
-        const getVet = (box) => {
-          if (!box) return '';
-          const src = box.querySelector('.vetSource')?.value || '';
-          const name = box.querySelector('.vetName')?.value || '';
-          return src === 'อื่นๆ' ? name : src;
-        };
-
-        return {
-          no: i + 1,
-          name: card.querySelector('.petName')?.value || '',
-          gender: card.querySelector('.gender')?.value || '',
-          ageYear: card.querySelector('.ageYear')?.value || '',
-          ageMonth: card.querySelector('.ageMonth')?.value || '',
-          color: card.querySelector('.color')?.value || '',
-          sterilization: card.querySelector('.sterilization')?.value || '',
-          contraceptiveDate: card.querySelector('.contraceptiveDate')?.value || '',
-          contraceptiveVet: getVet(card.querySelector('.contraceptiveVetBox')),
-          rabies: card.querySelector('.rabies')?.value || '',
-          rabiesDate: card.querySelector('.rabiesDate')?.value || '',
-          rabiesVet: getVet(card.querySelector('.rabiesVetBox')),
-          raising: card.querySelector('.raising')?.value || '',
-          location: card.querySelector('.location')?.value || ''
-        };
-      });
-    }
-
-    /* ---------- payload ---------- */
-    const payload = {
-      timestamp: new Date().toISOString(),
-      centerId: document.getElementById('centerId')?.value || '',
-      centerName: document.getElementById('centerName')?.value || '',
-      year: document.getElementById('year')?.value || '',
-      community: document.getElementById('community')?.value || '',
-      animalType: document.getElementById('animalType')?.value || '',
-      recorderName: document.getElementById('recorderName')?.value || '',
-      recorderRole: document.getElementById('recorderRole')?.value || '',
-      citizenId: document.getElementById('citizenId')?.value || '',
-      phone: document.getElementById('phone')?.value || '',
-      raisingPlace: document.getElementById('raisingPlace')?.value || '',
-      address: {
-        addrNo: document.getElementById('addrNo')?.value || '',
-        road: document.getElementById('road')?.value || '',
-        soi: document.getElementById('soi')?.value || '',
-        subdistrict: document.getElementById('subdistrict')?.value || '',
-        district: document.getElementById('district')?.value || '',
-        province: document.getElementById('province')?.value || ''
-      },
-      pets: pets
-    };
-
-    document.getElementById('status').innerText = '⏳ กำลังบันทึกข้อมูล...';
-
-    try {
-      const res = await fetch(GAS_URL, {
-        method: 'POST',
-        body: JSON.stringify(payload) // ⭐ ห้ามใส่ headers
-      });
-
-      const result = JSON.parse(await res.text());
-
-      if (result.status === 'success') {
-        document.getElementById('status').innerText =
-          '✅ บันทึกข้อมูลลง Google Sheet เรียบร้อย';
-
-        form.reset();
-        document.getElementById('petList').innerHTML = '';
-        document.getElementById('petQty').value = 0;
-
-      } else {
-        document.getElementById('status').innerText =
-          '❌ บันทึกไม่สำเร็จ: ' + (result.message || 'ไม่ทราบสาเหตุ');
-        console.error(result);
-      }
-
-    } catch (err) {
-      console.error(err);
-      document.getElementById('status').innerText =
-        '❌ ไม่สามารถเชื่อมต่อ Google Script';
-    }
-
-  });
-
+(function(){
+var $=function(i){return document.getElementById(i)};
+var WC={0:['แจ่มใส','☀️','🌙'],1:['แจ่มใสเป็นส่วนใหญ่','🌤️','🌙'],2:['มีเมฆบางส่วน','⛅','☁️'],3:['เมฆมาก','☁️','☁️'],45:['หมอก','🌫️','🌫️'],48:['หมอกน้ำค้างแข็ง','🌫️','🌫️'],51:['ฝนปรอยเบา','🌦️','🌧️'],53:['ฝนปรอย','🌦️','🌧️'],55:['ฝนปรอยหนา','🌧️','🌧️'],56:['ฝนเยือกแข็งเบา','🌧️','🌧️'],57:['ฝนเยือกแข็ง','🌧️','🌧️'],61:['ฝนเล็กน้อย','🌦️','🌧️'],63:['ฝนปานกลาง','🌧️','🌧️'],65:['ฝนหนัก','🌧️','🌧️'],66:['ฝนเยือกแข็ง','🌧️','🌧️'],67:['ฝนเยือกแข็งหนัก','🌧️','🌧️'],71:['หิมะเล็กน้อย','🌨️','🌨️'],73:['หิมะปานกลาง','🌨️','🌨️'],75:['หิมะหนัก','❄️','❄️'],77:['เกล็ดหิมะ','🌨️','🌨️'],80:['ฝนซู่เล็กน้อย','🌦️','🌧️'],81:['ฝนซู่','🌧️','🌧️'],82:['ฝนซู่รุนแรง','⛈️','⛈️'],85:['หิมะโปรย','🌨️','🌨️'],86:['หิมะโปรยหนัก','🌨️','🌨️'],95:['พายุฟ้าคะนอง','⛈️','⛈️'],96:['ฟ้าคะนองมีลูกเห็บ','⛈️','⛈️'],99:['ฟ้าคะนองลูกเห็บรุนแรง','⛈️','⛈️']};
+function wc(c,day){var w=WC[c]||['ไม่ทราบ','❔','❔'];return{d:w[0],i:day===0?w[2]:w[1]}}
+var KEY='weather-app-v1',S={place:null,favs:[],unit:'C'},cur=null;
+function load(){try{var r=JSON.parse(localStorage.getItem(KEY)||'{}');if(r.favs)S.favs=r.favs;if(r.place)S.place=r.place;if(r.unit)S.unit=r.unit}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function T(c){if(c==null)return '–';var v=S.unit==='F'?c*9/5+32:c;return Math.round(v)+'°'}
+function msg(t,e){var s=$('st');s.hidden=false;s.className=e?'e':'';s.textContent=t;$('app').hidden=true}
+function wdir(d){var n=['เหนือ','ตอ.เหนือ','ตะวันออก','ตอ.ใต้','ใต้','ตต.ใต้','ตะวันตก','ตต.เหนือ'];return n[Math.round(d/45)%8]}
+function hhmm(s){return s.slice(11,16)}
+function aqi(v){if(v==null)return['–','var(--mu)'];if(v<=50)return['ดี','#2fb36b'];if(v<=100)return['ปานกลาง','#d9a400'];if(v<=150)return['เริ่มมีผลต่อกลุ่มเสี่ยง','#f08a24'];if(v<=200)return['มีผลต่อสุขภาพ','#e5484d'];return['อันตราย','#8e4ec6']}
+function uv(v){return v<3?'ต่ำ':v<6?'ปานกลาง':v<8?'สูง':v<11?'สูงมาก':'รุนแรง'}
+function key(p){return p.lat.toFixed(2)+','+p.lon.toFixed(2)}
+function getJ(u){return fetch(u).then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.json()})}
+function go(p){
+ S.place=p;save();msg('กำลังโหลดสภาพอากาศ…');
+ var f='https://api.open-meteo.com/v1/forecast?latitude='+p.lat+'&longitude='+p.lon+'&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,cloud_cover,pressure_msl,wind_speed_10m,wind_direction_10m&hourly=temperature_2m,precipitation_probability,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,sunrise,sunset,uv_index_max&timezone=auto&forecast_days=7';
+ var a='https://air-quality-api.open-meteo.com/v1/air-quality?latitude='+p.lat+'&longitude='+p.lon+'&current=us_aqi,pm2_5,pm10&timezone=auto';
+ Promise.all([getJ(f),getJ(a).catch(function(){return null})]).then(function(r){cur={w:r[0],a:r[1],p:p};render()}).catch(function(){msg('โหลดข้อมูลไม่สำเร็จ ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่',1)})}
+function render(){
+ var w=cur.w,c=w.current,d=w.daily,h=w.hourly,p=cur.p,x=wc(c.weather_code,c.is_day);
+ $('st').hidden=true;$('app').hidden=false;
+ $('name').textContent=p.name;$('ic').textContent=x.i;$('t').textContent=T(c.temperature_2m);$('desc').textContent=x.d+' · รู้สึกเหมือน '+T(c.apparent_temperature);
+ $('hl').textContent='สูงสุด '+T(d.temperature_2m_max[0])+' ต่ำสุด '+T(d.temperature_2m_min[0]);
+ var on=S.favs.some(function(f){return key(f)===key(p)});$('fav').textContent=on?'★':'☆';
+ var det=[['ความชื้น',c.relative_humidity_2m+'%'],['ลม',Math.round(c.wind_speed_10m)+' กม./ชม. '+wdir(c.wind_direction_10m)],['ความกดอากาศ',Math.round(c.pressure_msl)+' hPa'],['เมฆปกคลุม',c.cloud_cover+'%'],['ฝนขณะนี้',c.precipitation+' มม.'],['ดัชนี UV วันนี้',Math.round(d.uv_index_max[0])+' ('+uv(d.uv_index_max[0])+')'],['พระอาทิตย์ขึ้น',hhmm(d.sunrise[0])],['พระอาทิตย์ตก',hhmm(d.sunset[0])]];
+ $('det').innerHTML=det.map(function(i){return '<div class="m"><span>'+i[0]+'</span><b>'+esc(i[1])+'</b></div>'}).join('');
+ var i0=0;for(var i=0;i<h.time.length;i++){if(h.time[i]>=c.time.slice(0,13)+':00'){i0=i;break}}
+ var hs='';for(var k=i0;k<i0+24&&k<h.time.length;k++){var hx=wc(h.weather_code[k],h.is_day[k]);hs+='<div class="h"><div>'+(k===i0?'ตอนนี้':hhmm(h.time[k]))+'</div><div class="i">'+hx.i+'</div><b>'+T(h.temperature_2m[k])+'</b><div class="r">'+(h.precipitation_probability[k]>=10?'💧'+h.precipitation_probability[k]+'%':'')+'</div></div>'}
+ $('hr').innerHTML=hs;
+ var mn=Math.min.apply(null,d.temperature_2m_min),mx=Math.max.apply(null,d.temperature_2m_max),rg=mx-mn||1,ds='';
+ for(var j=0;j<d.time.length;j++){var dt=new Date(d.time[j]+'T12:00'),dx=wc(d.weather_code[j],1),l=(d.temperature_2m_min[j]-mn)/rg*100,wd=(d.temperature_2m_max[j]-d.temperature_2m_min[j])/rg*100;
+  ds+='<div class="d"><div>'+(j===0?'วันนี้':dt.toLocaleDateString('th-TH',{weekday:'short',day:'numeric'}))+'</div><div title="'+esc(dx.d)+'">'+dx.i+'</div><div><div class="bar2"><i style="left:'+l+'%;width:'+Math.max(wd,4)+'%"></i></div><small style="color:var(--mu)">'+esc(dx.d)+(d.precipitation_probability_max[j]>=10?' · 💧'+d.precipitation_probability_max[j]+'%':'')+'</small></div><div>'+T(d.temperature_2m_min[j])+' / <b>'+T(d.temperature_2m_max[j])+'</b></div></div>'}
+ $('dy').innerHTML=ds;
+ var ac=cur.a&&cur.a.current;
+ if(ac){var q=aqi(ac.us_aqi);$('aq').innerHTML='<div class="m"><span>US AQI</span><b style="color:'+q[1]+'">'+Math.round(ac.us_aqi)+' · '+q[0]+'</b></div><div class="m"><span>PM2.5</span><b>'+Math.round(ac.pm2_5)+' µg/m³</b></div><div class="m"><span>PM10</span><b>'+Math.round(ac.pm10)+' µg/m³</b></div>'}
+ else $('aq').innerHTML='<div class="m"><span>ไม่มีข้อมูลคุณภาพอากาศ</span><b>–</b></div>';
+ $('upd').textContent='อัปเดตข้อมูลล่าสุด '+c.time.replace('T',' ')+' (เวลาท้องถิ่น)';
+ favs()}
+function favs(){$('favs').innerHTML=S.favs.map(function(f,i){return '<button class="chip" data-i="'+i+'">'+esc(f.name)+'</button>'}).join('')}
+$('favs').onclick=function(e){var i=e.target.getAttribute('data-i');if(i!==null)go(S.favs[+i])};
+$('fav').onclick=function(){if(!cur)return;var k=key(cur.p),i=-1;S.favs.forEach(function(f,n){if(key(f)===k)i=n});if(i>-1)S.favs.splice(i,1);else if(S.favs.length<8)S.favs.push(cur.p);save();render()};
+$('uc').onclick=$('uf').onclick=function(e){S.unit=e.target.id==='uf'?'F':'C';$('uc').className=S.unit==='C'?'on':'';$('uf').className=S.unit==='F'?'on':'';save();if(cur)render()};
+var tm;
+$('q').oninput=function(){clearTimeout(tm);var v=this.value.trim();if(v.length<2){$('sug').hidden=true;return}
+ tm=setTimeout(function(){getJ('https://geocoding-api.open-meteo.com/v1/search?count=6&language=th&name='+encodeURIComponent(v)).then(function(r){
+  var rs=r.results||[];if(!rs.length){$('sug').innerHTML='<button disabled>ไม่พบเมืองที่ค้นหา</button>';$('sug').hidden=false;return}
+  $('sug').innerHTML=rs.map(function(x,i){return '<button data-j="'+i+'">'+esc(x.name)+(x.admin1?', '+esc(x.admin1):'')+', '+esc(x.country||'')+'</button>'}).join('');$('sug').hidden=false;$('sug')._r=rs}).catch(function(){})},300)};
+$('sug').onclick=function(e){var j=e.target.getAttribute('data-j');if(j===null)return;var x=$('sug')._r[+j];$('sug').hidden=true;$('q').value='';go({name:x.name+(x.admin1?', '+x.admin1:''),lat:x.latitude,lon:x.longitude})};
+document.addEventListener('click',function(e){if(!$('sug').contains(e.target)&&e.target!==$('q'))$('sug').hidden=true});
+$('gps').onclick=function(){
+ if(!navigator.geolocation){msg('อุปกรณ์ไม่รองรับการระบุตำแหน่ง',1);return}
+ msg('กำลังหาตำแหน่ง…');
+ navigator.geolocation.getCurrentPosition(function(p){go({name:'ตำแหน่งของฉัน',lat:+p.coords.latitude.toFixed(4),lon:+p.coords.longitude.toFixed(4)})},function(){msg('ไม่สามารถระบุตำแหน่งได้ กรุณาอนุญาตการเข้าถึงตำแหน่ง หรือค้นหาชื่อเมือง',1);if(S.place)setTimeout(function(){go(S.place)},2500)},{timeout:10000})};
+load();$('uc').className=S.unit==='C'?'on':'';$('uf').className=S.unit==='F'?'on':'';favs();
+go(S.place||{name:'กรุงเทพมหานคร',lat:13.7563,lon:100.5018});
+setInterval(function(){if(cur&&!document.hidden)go(cur.p)},600000);
 })();
 </script>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-
-  const phoneInput = document.getElementById('phone');
-  if (!phoneInput) return;
-
-  /* ===== label เบอร์โทรศัพท์บ้าน ===== */
-  const homePhoneLabel = document.createElement('label');
-  homePhoneLabel.textContent = 'เบอร์โทรศัพท์บ้าน';
-
-  /* ===== input เบอร์โทรศัพท์บ้าน ===== */
-  const homePhoneInput = document.createElement('input');
-  homePhoneInput.type = 'text';
-  homePhoneInput.id = 'homePhone';
-  homePhoneInput.placeholder = 'เช่น 045-123456';
-  homePhoneInput.pattern = '[0-9\\-]+';
-
-  /* ===== แทรกใต้เบอร์มือถือ ===== */
-  phoneInput.insertAdjacentElement('afterend', homePhoneInput);
-  homePhoneInput.insertAdjacentElement('beforebegin', homePhoneLabel);
-
-});
-</script>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-
-  const communityInput = document.getElementById('community');
-  if (!communityInput) return;
-
-  /* ===== สร้าง select ===== */
-  const communitySelect = document.createElement('select');
-  communitySelect.id = 'communitySelect';
-  communitySelect.style.display = 'none';
-  communitySelect.required = true;
-
-  /* ===== รายชื่อชุมชนแยกตามศูนย์ ===== */
-  const communitiesByCenter = {
-
-    1: [
-      'ชุมชนวัดไชยมงคล',
-      'ชุมชนวัดสุปัฏน์',
-      'ชุมชนวัดศรีอุบลรัตนาราม',
-      'ชุมชนศาลาประชาคม',
-      'ชุมชนโรงเรียนอนุบาลอุบล',
-      'ชุมชนวัดทุ่งศรีเมือง 1',
-      'ชุมชนวัดทุ่งศรีเมือง 2',
-      'ชุมชนวัดหลวง 1',
-      'ชุมชนวัดหลวง 2',
-      'ชุมชนวัดกลาง',
-      'ชุมชนวัดเลียบ 1',
-      'ชุมชนวัดเลียบ 2',
-      'ชุมชนโรงเรียนเทศบาลบูรพา 1',
-      'ชุมชนโรงเรียนเทศบาลบูรพา 2'
-    ],
-
-    2: [
-      'โรงเรียนบ้านก้านเหลือง 1',
-      'โรงเรียนบ้านก้านเหลือง 2',
-      'โรงเรียนบ้านก้านเหลือง 3',
-      'วัดพระธาตุหนองบัว 1',
-            'วัดพระธาตุหนองบัว 2',
-      'โรงเรียนเทศบาล 2 หนองบัว',
-      'โรงเรียนโปลีเทคนิค 1',
-      'โรงเรียนโปลีเทคนิค 2',
-      'ศาลาหนองนาควาย 1',
-      'ศาลาหนองนาควาย 2',
-      'วัดบ้านนาควาย 1',
-      'วัดบ้านนาควาย 2',
-      'โรงเรียนเมืองอุบล 1',
-      'โรงเรียนเมืองอุบล 2'
-    ],
-
-    3: [
-      'ถนนพนม 1',
-      'ถนนพนม 2',
-      'โรงเรียนเบ็ญจะมะ 3',
-      'โรงเรียนเบ็ญจะมะ 4',
-      'วัดท่าวังหิน',
-      'หลังโรงเรียนเยาวเรศ 1',
-      'หลังโรงเรียนเยาวเรศ 2',
-      'หลังโรงเรียนเยาวเรศ 3',
-      'หลังโรงเรียนเยาวเรศ 4',
-      'ชุมชนสำนักงานที่ดินจังหวัดฯ',
-      'วัดโรมันคาทอลิค',
-      'โรงเรียนสามัคคี 3',
-      'วัดกุดคูณ',
-      'วิทยาลัยสารพัดช่าง'
-    ],
-
-    4: [
-      'วัดพลแพน',
-      'ตลาดสดเทศบาล 5',
-      'ศาลากลางบ้านดู่ 1',
-      'ศาลากลางบ้านดู่ 2',
-      'ศาลากลางบ้านดู่ 3',
-      'ศาลากลางบ้านดู่ 4',
-      'วัดศรีประดู่ 1',
-      'วัดศรีประดู่ 2',
-      'วัดบูรพา 1',
-      'วัดบูรพา 2',
-      'วัดบูรพา 3',
-      'วัดเลียบ 3'
-    ],
-
-    5: [
-      'วังทอง',
-      'วัดศรีแสงทอง',
-      'สหกรณ์การเกษตร 1',
-      'สหกรณ์การเกษตร 2',
-      'สหกรณ์การเกษตร 3',
-      'ดอนเจ้าปู่ทองแดง 1',
-      'ดอนเจ้าปู่ทองแดง 2',
-      'โรงเรียนปทุมวิทยากร 1',
-      'โรงเรียนปทุมวิทยากร 2',
-      'สำนักงานขนส่งจังหวัด',
-      'อุปลีสาน 6',
-      'วัดสารพัฒนึก 1',
-      'วัดสารพัฒนึก 2',
-      'วิทยาลัยพยาบาล',
-      'ทางเข้าคริสตจักร'
-    ],
-
-    6: [
-      'เฉลิมพระเกียรติ 1',
-      'เฉลิมพระเกียรติ 2',
-      'วัดป่าแสนอุดม 1',
-      'วัดป่าแสนอุดม 2',
-      'วัดป่าแสนอุดม 3',
-      'ต้นซอยสุขาอุปถัมภ์ 11',
-      'ท้ายซอยสุขาอุปถัมภ์ 11',
-      'พระศรีมหาโพธิ์ 1',
-      'พระศรีมหาโพธิ์ 2'
-    ],
-
-    7: [
-      'สนามกีฬากลาง 1',
-      'สนามกีฬากลาง 2',
-      'สนามกีฬากลาง 3',
-      'ชยางกูร 2.1 (1)',
-      'ชยางกูร 2.1 (2)',
-      'โรงเรียนนารีนุกูล',
-      'อยู่วงศ์ธรรม',
-      'โรงเรียนอัสสัมชัญ 1',
-      'โรงเรียนอัสสัมชัญ 2',
-      'วัดทองนพคุณ',
-      'วัดปทุมมาลัย 1',
-      'วัดปทุมมาลัย 2',
-      'วัดแจ้ง 1',
-      'วัดแจ้ง 2',
-      'โรงเรียนอุบลวิทยาคม 1',
-      'โรงเรียนอุบลวิทยาคม 2',
-      'วัดมหาวนาราม 1',
-      'วัดมหาวนาราม 2',
-      'วัดมณีวนาราม',
-      'ศาลเยาวชนและครอบครัว',
-      'วัดสว่างอารมณ์ 1',
-      'วัดสว่างอารมณ์ 2',
-      'โรงเรียนสามัคคี 1',
-      'โรงเรียนสามัคคี 2',
-      'วิทยาลัยเทคนิค 1',
-      'วิทยาลัยเทคนิค 2',
-      'โรงเรียนเบ็ญจะมะ 1',
-      'โรงเรียนเบ็ญจะมะ 2'
-    ]
-
-  };
-
-  /* แทรก select หลัง input */
-  communityInput.insertAdjacentElement('afterend', communitySelect);
-
-  /* ===== ฟังก์ชันเปลี่ยนชุมชนตามศูนย์ ===== */
-  window.updateCommunityByCenter = function (centerId) {
-
-    const list = communitiesByCenter[centerId];
-
-    if (list) {
-      communityInput.style.display = 'none';
-      communityInput.required = false;
-      communityInput.value = '';
-
-      communitySelect.style.display = 'block';
-      communitySelect.innerHTML =
-        '<option value="">-- เลือกชุมชน --</option>' +
-        list.map(c => `<option value="${c}">${c}</option>`).join('');
-    } else {
-      communitySelect.style.display = 'none';
-      communitySelect.value = '';
-
-      communityInput.style.display = 'block';
-      communityInput.required = true;
-    }
-  };
-
-  /* ===== ตอน submit โอนค่ากลับไป input ===== */
-  const form = document.getElementById('surveyForm');
-  form.addEventListener('submit', function () {
-    if (communitySelect.style.display !== 'none') {
-      communityInput.value = communitySelect.value;
-    }
-  });
-
-});
-</script>
-<script>
-/* ==================================================
-   FIX ชุมชนไม่ขึ้น โดยไม่แก้ไฟล์เดิม
-   ใช้ submit capture (ทำงานก่อนทุก submit เดิม)
-================================================== */
-document.addEventListener('submit', function (e) {
-
-  const form = e.target;
-  if (!form || form.id !== 'surveyForm') return;
-
-  const communityInput = document.getElementById('community');
-  const communitySelect = document.getElementById('communitySelect');
-
-  if (communityInput && communitySelect &&
-      communitySelect.style.display !== 'none') {
-
-    communityInput.value = communitySelect.value || '';
-  }
-
-}, true); // ⭐ true = capture phase
-</script>
-<script>
-/* ==================================================
-   FIX เบอร์โทรศัพท์บ้าน ไม่ขึ้น Sheet
-   โดยไม่แก้ submit / payload เดิม
-================================================== */
-(function () {
-
-  const originalFetch = window.fetch;
-
-  window.fetch = function (url, options) {
-
-    try {
-      if (options && typeof options.body === 'string') {
-        const data = JSON.parse(options.body);
-
-        // อ่านค่าจาก input ที่เพิ่มภายหลัง
-        const homePhoneInput = document.getElementById('homePhone');
-        if (homePhoneInput) {
-          data.homePhone = homePhoneInput.value || '';
-        }
-
-        // เขียน body กลับ
-        options.body = JSON.stringify(data);
-      }
-    } catch (e) {
-      console.warn('inject homePhone failed', e);
-    }
-
-    return originalFetch.call(this, url, options);
-  };
-
-})();
-</script>
-
 </body>
-
 </html>
