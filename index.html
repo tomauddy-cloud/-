@@ -1,12 +1,13 @@
-
 <!DOCTYPE html>
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ระบบสำรวจสัตว์ งานสัตวแพทย์</title>
-
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
+
+
 @import url("https://fonts.googleapis.com/css2?family=Prompt:wght@500;600;700&family=Sarabun:wght@400;500;600;700&display=swap");
 
 :root {
@@ -471,12 +472,13 @@ button { min-height: 42px; touch-action: manipulation; }
 #houseMap .leaflet-control-zoom a { width: 34px; height: 34px; line-height: 34px; }
 @media (min-width: 1100px) { #houseMap { height: min(68vh, 650px); } }
 @media (max-width: 600px) { #houseMap { height: min(62vh, 480px); min-height: 320px; } #houseMap .leaflet-control-layers { max-width: 190px; } }
+
+/* ===== รวมแผนที่ให้เป็นผืนเดียว: กัน tile แยกเป็นชิ้น + ล็อกขนาดกรอบ ===== */
+#houseMap img.leaflet-tile { max-width: none !important; }
+
 </style>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 </head>
-
 <body>
-
 <header>
     <div class="header-brand">
 
@@ -709,7 +711,6 @@ button { min-height: 42px; touch-action: manipulation; }
     id="citizenId"
     maxlength="13"
     minlength="13"
-    pattern="\d{13}"
     required>
 
 <h3 style="margin-top:20px">
@@ -799,7 +800,6 @@ button { min-height: 42px; touch-action: manipulation; }
     type="text"
     id="phone"
     maxlength="10"
-    pattern="\d{10}"
     required>
 
 <label>เบอร์โทรศัพท์บ้าน</label>
@@ -807,8 +807,7 @@ button { min-height: 42px; touch-action: manipulation; }
 <input
     type="text"
     id="homePhone"
-    placeholder="เช่น 045-123456"
-    pattern="[0-9-]+">
+    placeholder="เช่น 045-123456">
 
 <label>
 สถานที่เลี้ยง <span style="color:red">*</span>
@@ -851,8 +850,13 @@ button { min-height: 42px; touch-action: manipulation; }
 งานสัตวแพทย์ |
 045-246060 ต่อ 180 280
 </footer>
-
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
+/* ตั้ง pattern ผ่าน JS (ห้ามใส่ {} หรือ [] ใน attribute ของ HTML ตรง ๆ เพราะ Perchance จะแปลเป็นโค้ด) */
+document.getElementById('citizenId').setAttribute('pattern', '\\d{13}');
+document.getElementById('phone').setAttribute('pattern', '\\d{10}');
+document.getElementById('homePhone').setAttribute('pattern', '[0-9-]+');
+
 
 /* =====================================================
    GOOGLE APPS SCRIPT
@@ -1146,30 +1150,51 @@ function initHouseMap() {
         return;
     }
     if (!houseMap) {
-        // แผนที่หลายรูปแบบ: ถนน, ภาพถ่ายดาวเทียม และดาวเทียมพร้อมชื่อสถานที่
         houseMap = L.map('houseMap', {
             zoomControl: true,
             preferCanvas: true,
             scrollWheelZoom: true
         }).setView(UBON_DEFAULT_CENTER, 17);
+        houseMap.attributionControl.setPrefix('© งานสัตวแพทย์ เทศบาลนครอุบลราชธานี');
 
-        // ชั้นแผนที่ถนนจากหลายผู้ให้บริการ พร้อมสลับอัตโนมัติเมื่อพบ tile โหลดไม่สำเร็จจำนวนมาก
-        // หมายเหตุ: การแสดงแผนที่ต้องใช้อินเทอร์เน็ต และความครบถ้วนขึ้นกับผู้ให้บริการ
-        const tileOptions = {
+        // แผนที่ฐานรวมเป็นอันเดียว: ถนน 1 ชั้น (สลับแหล่งอัตโนมัติข้างใน) + ดาวเทียมไฮบริด 1 ชั้น
+        const streetSources = [
+            {
+                url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+                subdomains: 'abc'
+            },
+            {
+                url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                subdomains: 'abc'
+            },
+            {
+                url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+                subdomains: 'abcd'
+            }
+        ];
+        let streetSourceIndex = 0;
+        let streetErrorCount = 0;
+        const streetLayer = L.tileLayer(streetSources[0].url, {
             minZoom: 3, maxNativeZoom: 19, maxZoom: 22,
             keepBuffer: 3, updateWhenIdle: true, updateWhenZooming: false,
-            crossOrigin: true
-        };
-        const osmStreet = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            ...tileOptions, subdomains: 'abc',
-            attribution: '&copy; OpenStreetMap contributors'
+            crossOrigin: true,
+            subdomains: streetSources[0].subdomains,
+            attribution: ''
         });
-        const esriStreet = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
-            ...tileOptions, attribution: 'Tiles &copy; Esri'
+        streetLayer.on('tileerror', function () {
+            streetErrorCount++;
+            if (streetErrorCount >= 8 && streetSourceIndex < streetSources.length - 1) {
+                streetSourceIndex++;
+                streetLayer.options.subdomains = streetSources[streetSourceIndex].subdomains;
+                streetLayer.setUrl(streetSources[streetSourceIndex].url);
+                streetErrorCount = 0;
+                setHouseMapMessage('แผนที่บางส่วนโหลดไม่สำเร็จ กำลังเปลี่ยนแหล่งแผนที่ให้อัตโนมัติ');
+                setTimeout(function () { houseMap.invalidateSize(); }, 250);
+            }
         });
-        const cartoStreet = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-            ...tileOptions, subdomains: 'abcd',
-            attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+        streetLayer.on('load', function () {
+            streetErrorCount = 0;
+            setHouseMapMessage('แผนที่พร้อมใช้งาน');
         });
         const esriSatellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
             minZoom: 3,
@@ -1178,7 +1203,7 @@ function initHouseMap() {
             keepBuffer: 4,
             updateWhenIdle: true,
             updateWhenZooming: false,
-            attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics'
+            attribution: ''
         });
         const satelliteLabels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
             minZoom: 3,
@@ -1187,43 +1212,16 @@ function initHouseMap() {
             keepBuffer: 4,
             updateWhenIdle: true,
             updateWhenZooming: false,
-            attribution: 'Labels &copy; Esri',
+            attribution: '',
             pane: 'overlayPane'
         });
         const satelliteHybrid = L.layerGroup([esriSatellite, satelliteLabels]);
 
-        // เริ่มด้วย Esri Street และสลับไปยัง OSM/CARTO อัตโนมัติหาก tile ขาดหลายช่อง
-        let activeStreet = esriStreet;
-        let fallbackIndex = 0;
-        let tileErrorCount = 0;
-        const streetFallbacks = [osmStreet, cartoStreet];
-        function watchStreetTiles(layer) {
-            layer.on('tileerror', function () {
-                tileErrorCount++;
-                if (tileErrorCount >= 8 && fallbackIndex < streetFallbacks.length && activeStreet === layer) {
-                    const nextLayer = streetFallbacks[fallbackIndex++];
-                    houseMap.removeLayer(activeStreet);
-                    activeStreet = nextLayer;
-                    activeStreet.addTo(houseMap);
-                    tileErrorCount = 0;
-                    setHouseMapMessage('แผนที่บางส่วนโหลดไม่สำเร็จ กำลังเปลี่ยนแหล่งแผนที่ให้อัตโนมัติ');
-                    setTimeout(function () { houseMap.invalidateSize(); }, 250);
-                }
-            });
-            layer.on('load', function () {
-                tileErrorCount = 0;
-                setHouseMapMessage('แผนที่พร้อมใช้งาน');
-            });
-        }
-        [esriStreet, osmStreet, cartoStreet].forEach(watchStreetTiles);
-        activeStreet.addTo(houseMap);
+        streetLayer.addTo(houseMap);
         L.control.layers({
-            'แผนที่ถนน (Esri)': esriStreet,
-            'แผนที่ถนน (OpenStreetMap)': osmStreet,
-            'แผนที่ถนน (CARTO)': cartoStreet,
-            'ภาพถ่ายดาวเทียม': esriSatellite,
+            'แผนที่ถนน': streetLayer,
             'ดาวเทียม + ชื่อสถานที่': satelliteHybrid
-        }, null, {collapsed: false, position: 'topright'}).addTo(houseMap);
+        }, null, {collapsed: window.innerWidth < 600, position: 'topright'}).addTo(houseMap);
         L.control.scale({metric: true, imperial: false, position: 'bottomleft'}).addTo(houseMap);
         const refreshTilesControl = L.control({position: 'bottomright'});
         refreshTilesControl.onAdd = function () {
@@ -1234,12 +1232,8 @@ function initHouseMap() {
             button.style.cssText = 'background:#fff;padding:7px 10px;border:0;border-radius:4px;font:13px Sarabun,sans-serif;cursor:pointer;';
             L.DomEvent.disableClickPropagation(button);
             L.DomEvent.on(button, 'click', function () {
-                tileErrorCount = 0;
-                if (activeStreet && houseMap.hasLayer(activeStreet)) {
-                    activeStreet.redraw();
-                } else {
-                    activeStreet.addTo(houseMap);
-                }
+                streetErrorCount = 0;
+                streetLayer.redraw();
                 setHouseMapMessage('กำลังโหลดภาพแผนที่ใหม่…');
             });
             return button;
@@ -2635,6 +2629,7 @@ function compressImage(
         }
     );
 }
+
 
 </script>
 
