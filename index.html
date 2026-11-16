@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -462,6 +463,14 @@ button { min-height: 42px; touch-action: manipulation; }
   .house-map-panel { margin-left: 0; margin-right: 0; padding: 10px; }
   #houseMap { width: 100% !important; height: min(52vh, 360px); min-height: 250px; }
 }
+
+/* ===== Detailed map controls ===== */
+#houseMap { min-height: 340px; background: #e8edf3; }
+#houseMap .leaflet-control-layers { border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,.18); font-size: 13px; }
+#houseMap .leaflet-control-layers-expanded { padding: 9px 11px; }
+#houseMap .leaflet-control-zoom a { width: 34px; height: 34px; line-height: 34px; }
+@media (min-width: 1100px) { #houseMap { height: min(68vh, 650px); } }
+@media (max-width: 600px) { #houseMap { height: min(62vh, 480px); min-height: 320px; } #houseMap .leaflet-control-layers { max-width: 190px; } }
 </style>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 </head>
@@ -1137,11 +1146,65 @@ function initHouseMap() {
         return;
     }
     if (!houseMap) {
-        houseMap = L.map('houseMap').setView(UBON_DEFAULT_CENTER, 15);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 20,
+        // แผนที่หลายรูปแบบ: ถนน, ภาพถ่ายดาวเทียม และดาวเทียมพร้อมชื่อสถานที่
+        houseMap = L.map('houseMap', {
+            zoomControl: true,
+            preferCanvas: true,
+            scrollWheelZoom: true
+        }).setView(UBON_DEFAULT_CENTER, 17);
+
+        // ใช้ OSM เป็นชั้นถนนหลักเพื่อลดปัญหา tile ขาดจากบริการแผนที่บางราย
+        // maxNativeZoom จำกัดระดับภาพต้นฉบับ ส่วน maxZoom อนุญาตให้ขยายต่อได้
+        const osmStreet = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            subdomains: 'abc',
+            minZoom: 3,
+            maxNativeZoom: 19,
+            maxZoom: 22,
+            keepBuffer: 4,
+            updateWhenIdle: true,
+            updateWhenZooming: false,
             attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(houseMap);
+        });
+        const esriStreet = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+            minZoom: 3,
+            maxNativeZoom: 19,
+            maxZoom: 22,
+            keepBuffer: 4,
+            updateWhenIdle: true,
+            updateWhenZooming: false,
+            attribution: 'Tiles &copy; Esri'
+        });
+        const esriSatellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            minZoom: 3,
+            maxNativeZoom: 19,
+            maxZoom: 22,
+            keepBuffer: 4,
+            updateWhenIdle: true,
+            updateWhenZooming: false,
+            attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics'
+        });
+        const satelliteLabels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+            minZoom: 3,
+            maxNativeZoom: 19,
+            maxZoom: 22,
+            keepBuffer: 4,
+            updateWhenIdle: true,
+            updateWhenZooming: false,
+            attribution: 'Labels &copy; Esri',
+            pane: 'overlayPane'
+        });
+        const satelliteHybrid = L.layerGroup([esriSatellite, satelliteLabels]);
+
+        // ค่าเริ่มต้นเป็น OpenStreetMap; ยังเลือกถนน Esri และภาพดาวเทียมได้
+        osmStreet.addTo(houseMap);
+        L.control.layers({
+            'แผนที่ถนน (OpenStreetMap)': osmStreet,
+            'แผนที่ถนน (Esri)': esriStreet,
+            'ภาพถ่ายดาวเทียม': esriSatellite,
+            'ดาวเทียม + ชื่อสถานที่': satelliteHybrid
+        }, null, {collapsed: false, position: 'topright'}).addTo(houseMap);
+        L.control.scale({metric: true, imperial: false, position: 'bottomleft'}).addTo(houseMap);
+
         houseMarkersLayer = L.layerGroup().addTo(houseMap);
         houseMap.on('click', function(e) {
             if (!housePickMode) return;
