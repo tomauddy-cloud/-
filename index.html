@@ -1153,26 +1153,23 @@ function initHouseMap() {
             scrollWheelZoom: true
         }).setView(UBON_DEFAULT_CENTER, 17);
 
-        // ใช้ OSM เป็นชั้นถนนหลักเพื่อลดปัญหา tile ขาดจากบริการแผนที่บางราย
-        // maxNativeZoom จำกัดระดับภาพต้นฉบับ ส่วน maxZoom อนุญาตให้ขยายต่อได้
+        // ชั้นแผนที่ถนนจากหลายผู้ให้บริการ พร้อมสลับอัตโนมัติเมื่อพบ tile โหลดไม่สำเร็จจำนวนมาก
+        // หมายเหตุ: การแสดงแผนที่ต้องใช้อินเทอร์เน็ต และความครบถ้วนขึ้นกับผู้ให้บริการ
+        const tileOptions = {
+            minZoom: 3, maxNativeZoom: 19, maxZoom: 22,
+            keepBuffer: 3, updateWhenIdle: true, updateWhenZooming: false,
+            crossOrigin: true
+        };
         const osmStreet = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            subdomains: 'abc',
-            minZoom: 3,
-            maxNativeZoom: 19,
-            maxZoom: 22,
-            keepBuffer: 4,
-            updateWhenIdle: true,
-            updateWhenZooming: false,
+            ...tileOptions, subdomains: 'abc',
             attribution: '&copy; OpenStreetMap contributors'
         });
         const esriStreet = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
-            minZoom: 3,
-            maxNativeZoom: 19,
-            maxZoom: 22,
-            keepBuffer: 4,
-            updateWhenIdle: true,
-            updateWhenZooming: false,
-            attribution: 'Tiles &copy; Esri'
+            ...tileOptions, attribution: 'Tiles &copy; Esri'
+        });
+        const cartoStreet = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            ...tileOptions, subdomains: 'abcd',
+            attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
         });
         const esriSatellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
             minZoom: 3,
@@ -1195,15 +1192,59 @@ function initHouseMap() {
         });
         const satelliteHybrid = L.layerGroup([esriSatellite, satelliteLabels]);
 
-        // ค่าเริ่มต้นเป็น OpenStreetMap; ยังเลือกถนน Esri และภาพดาวเทียมได้
-        osmStreet.addTo(houseMap);
+        // เริ่มด้วย Esri Street และสลับไปยัง OSM/CARTO อัตโนมัติหาก tile ขาดหลายช่อง
+        let activeStreet = esriStreet;
+        let fallbackIndex = 0;
+        let tileErrorCount = 0;
+        const streetFallbacks = [osmStreet, cartoStreet];
+        function watchStreetTiles(layer) {
+            layer.on('tileerror', function () {
+                tileErrorCount++;
+                if (tileErrorCount >= 8 && fallbackIndex < streetFallbacks.length && activeStreet === layer) {
+                    const nextLayer = streetFallbacks[fallbackIndex++];
+                    houseMap.removeLayer(activeStreet);
+                    activeStreet = nextLayer;
+                    activeStreet.addTo(houseMap);
+                    tileErrorCount = 0;
+                    setHouseMapMessage('แผนที่บางส่วนโหลดไม่สำเร็จ กำลังเปลี่ยนแหล่งแผนที่ให้อัตโนมัติ');
+                    setTimeout(function () { houseMap.invalidateSize(); }, 250);
+                }
+            });
+            layer.on('load', function () {
+                tileErrorCount = 0;
+                setHouseMapMessage('แผนที่พร้อมใช้งาน');
+            });
+        }
+        [esriStreet, osmStreet, cartoStreet].forEach(watchStreetTiles);
+        activeStreet.addTo(houseMap);
         L.control.layers({
-            'แผนที่ถนน (OpenStreetMap)': osmStreet,
             'แผนที่ถนน (Esri)': esriStreet,
+            'แผนที่ถนน (OpenStreetMap)': osmStreet,
+            'แผนที่ถนน (CARTO)': cartoStreet,
             'ภาพถ่ายดาวเทียม': esriSatellite,
             'ดาวเทียม + ชื่อสถานที่': satelliteHybrid
         }, null, {collapsed: false, position: 'topright'}).addTo(houseMap);
         L.control.scale({metric: true, imperial: false, position: 'bottomleft'}).addTo(houseMap);
+        const refreshTilesControl = L.control({position: 'bottomright'});
+        refreshTilesControl.onAdd = function () {
+            const button = L.DomUtil.create('button', 'leaflet-bar');
+            button.type = 'button';
+            button.title = 'โหลดภาพแผนที่ใหม่';
+            button.textContent = '↻ โหลดแผนที่ใหม่';
+            button.style.cssText = 'background:#fff;padding:7px 10px;border:0;border-radius:4px;font:13px Sarabun,sans-serif;cursor:pointer;';
+            L.DomEvent.disableClickPropagation(button);
+            L.DomEvent.on(button, 'click', function () {
+                tileErrorCount = 0;
+                if (activeStreet && houseMap.hasLayer(activeStreet)) {
+                    activeStreet.redraw();
+                } else {
+                    activeStreet.addTo(houseMap);
+                }
+                setHouseMapMessage('กำลังโหลดภาพแผนที่ใหม่…');
+            });
+            return button;
+        };
+        refreshTilesControl.addTo(houseMap);
 
         houseMarkersLayer = L.layerGroup().addTo(houseMap);
         houseMap.on('click', function(e) {
