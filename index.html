@@ -571,6 +571,9 @@ button { min-height: 42px; touch-action: manipulation; }
 #searchPage { display: none; }
 #searchPage.page-hidden { display: none !important; }
 #searchPage.page-visible { display: block !important; }
+#statsPage { display: none; }
+#statsPage.page-hidden { display: none !important; }
+#statsPage.page-visible { display: block !important; }
 .center-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 18px; }
 .center-actions .page-button { border: 1.5px solid var(--line); background: #fff; color: var(--brand-deep); }
 .center-actions .page-button:hover { border-color: var(--brand); background: var(--field); }
@@ -583,6 +586,13 @@ button { min-height: 42px; touch-action: manipulation; }
 .mini-button { border: 1px solid var(--line); background: #fff; border-radius: 8px; padding: 8px 12px; font: inherit; font-size: 14px; cursor: pointer; white-space: nowrap; }
 .mini-button.primary { background: var(--brand); color: #fff; border-color: var(--brand); }
 .mini-button.danger { background: #a33; color: #fff; border-color: #a33; }
+.stat-hero { margin: 16px 0 6px; padding: 22px 16px; border-radius: 18px; text-align: center; color: #fff; background: linear-gradient(135deg, var(--brand-deep), var(--brand) 60%, var(--gold)); box-shadow: 0 8px 20px rgba(0,0,0,.12); }
+.stat-total { font-size: 52px; font-weight: 800; line-height: 1; }
+.stat-label { margin-top: 6px; font-size: 15px; opacity: .95; }
+.stat-row { margin: 12px 0; }
+.stat-top { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+.stat-bar { height: 12px; border-radius: 999px; background: #e6eaf3; overflow: hidden; }
+.stat-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--gold), var(--brand)); }
 </style>
 </head>
 <body>
@@ -689,6 +699,9 @@ button { min-height: 42px; touch-action: manipulation; }
     </button>
     <button type="button" class="page-button" onclick="openSearch()">
         📥 กล่องขาออก (<span data-outbox-count>0</span>)
+    </button>
+    <button type="button" class="page-button" onclick="openStats()">
+        🏅 ผลงานรายบุคคล
     </button>
 </div>
 
@@ -821,6 +834,15 @@ button { min-height: 42px; touch-action: manipulation; }
 <option>อสม.ศูนย์บริการสาธารณสุขศูนย์ที่ 7</option>
 
 </select>
+
+<label>เลขบัตรประชาชนผู้สำรวจ (13 หลัก, จำไว้ในเครื่อง)</label>
+
+<input
+    type="text"
+    id="surveyorId"
+    maxlength="13"
+    minlength="13"
+    placeholder="กรอกครั้งเดียว ระบบจะจำไว้ให้">
 
 <label>
 หมายเลขบัตรประชาชน เจ้าของสัตว์เลี้ยง (13 หลัก)
@@ -965,6 +987,35 @@ button { min-height: 42px; touch-action: manipulation; }
 </main>
 </div>
 
+<div id="statsPage" class="page-hidden">
+
+<main>
+
+<button
+    type="button"
+    class="page-button back-button"
+    onclick="backToCenter()">
+    ← กลับ
+</button>
+
+<h2>🏅 ผลงานรายบุคคล</h2>
+<p class="house-map-help">กรอกชื่อ-นามสกุลของผู้บันทึก เพื่อดูว่าสำรวจไปแล้วกี่บ้านเลขที่</p>
+
+<section class="search-panel" aria-label="กรอกเลขผู้สำรวจ">
+<label>ชื่อ-นามสกุลผู้บันทึก</label>
+<input id="statRecorderName" maxlength="100" placeholder="เช่น สมชาย ใจดี">
+<div class="house-map-actions">
+<button type="button" class="secondary" onclick="renderIndividualLocal()">ดูในเครื่องนี้</button>
+<button type="button" onclick="loadSurveyorFromServer()">โหลดจากเซิร์ฟเวอร์</button>
+</div>
+</section>
+
+<p id="statMsg" class="house-map-message"></p>
+<div id="statResults"></div>
+
+</main>
+</div>
+
 <div id="searchPage" class="page-hidden">
 
 <main>
@@ -1024,6 +1075,17 @@ button { min-height: 42px; touch-action: manipulation; }
 document.getElementById('citizenId').setAttribute('pattern', '\\d{13}');
 document.getElementById('phone').setAttribute('pattern', '\\d{10}');
 document.getElementById('homePhone').setAttribute('pattern', '[0-9-]+');
+document.getElementById('surveyorId').setAttribute('pattern', '\\d{13}');
+document.getElementById('recorderRole').addEventListener('change', function() {
+    try {
+        if (this.value === 'เจ้าของสัตว์เลี้ยง') {
+            const sid = (document.getElementById('surveyorId').value || '').trim();
+            if (/^\d{13}$/.test(sid)) {
+                document.getElementById('citizenId').value = sid;
+            }
+        }
+    } catch (e) {}
+});
 
 
 /* =====================================================
@@ -1031,7 +1093,7 @@ document.getElementById('homePhone').setAttribute('pattern', '[0-9-]+');
 ===================================================== */
 
 const GAS_URL =
-"https://script.google.com/macros/s/AKfycbxM0E4BguxaWIACBr5bK0eT7lys5etbtUgbxFqQJxnzJj6yCPEUSm22tvEccc_30uCf/exec";
+"https://script.google.com/macros/s/AKfycbwDgi0Xu0OAinssdE4Sp6p9SoANbvO_SmtofgT1gPs-QGgnC1T3O-6TSEGqW57hkNZk/exec";
 
 /* =====================================================
    รายชื่อชุมชน
@@ -1206,6 +1268,12 @@ function openForm(center) {
 
     loadCommunities(center);
 
+    /* จำเลขผู้สำรวจ: กรอกไว้ครั้งก่อนดึงมาใส่ให้ */
+    try {
+        const __sid = localStorage.getItem('animalSurveyorId') || '';
+        if (__sid) document.getElementById('surveyorId').value = __sid;
+    } catch (e) {}
+
     /* เตรียมแผนที่หลังเปิดหน้าแบบสำรวจ */
     setTimeout(initHouseMap, 120);
 
@@ -1213,6 +1281,8 @@ function openForm(center) {
     if (typeof exitEditMode === 'function') exitEditMode();
     var __searchPageEl = document.getElementById('searchPage');
     if (__searchPageEl) { __searchPageEl.classList.remove('page-visible'); __searchPageEl.classList.add('page-hidden'); }
+    var __statsPageEl = document.getElementById('statsPage');
+    if (__statsPageEl) { __statsPageEl.classList.remove('page-visible'); __statsPageEl.classList.add('page-hidden'); }
     centerPage.classList.remove('page-visible');
     centerPage.classList.add('page-hidden');
 
@@ -1240,6 +1310,8 @@ function backToCenter() {
     if (typeof exitEditMode === 'function') exitEditMode();
     var __searchPageEl2 = document.getElementById('searchPage');
     if (__searchPageEl2) { __searchPageEl2.classList.remove('page-visible'); __searchPageEl2.classList.add('page-hidden'); }
+    var __statsPageEl2 = document.getElementById('statsPage');
+    if (__statsPageEl2) { __statsPageEl2.classList.remove('page-visible'); __statsPageEl2.classList.add('page-hidden'); }
     formPage.classList.remove('page-visible');
     formPage.classList.add('page-hidden');
 
@@ -2187,6 +2259,20 @@ document
     }
 );
 
+document
+.getElementById('surveyorId')
+.addEventListener(
+    'input',
+    function() {
+
+        this.value =
+            this.value.replace(
+                /[^0-9]/g,
+                ''
+            );
+    }
+);
+
 
 /* =====================================================
    ส่งข้อมูล
@@ -2242,6 +2328,24 @@ document
             );
 
             phone.focus();
+            return;
+        }
+
+
+        /* ===============================
+           เลขผู้สำรวจ (ไม่บังคับ)
+        =============================== */
+
+        const surveyorIdEl =
+            document.getElementById('surveyorId');
+
+        if (surveyorIdEl.value && !/^\d{13}$/.test(surveyorIdEl.value)) {
+
+            alert(
+                'กรุณากรอกเลขบัตรประชาชนผู้สำรวจให้ครบ 13 หลัก หรือเว้นว่างไว้'
+            );
+
+            surveyorIdEl.focus();
             return;
         }
 
@@ -2667,6 +2771,11 @@ document
                     'recorderRole'
                 ).value,
 
+            surveyorId:
+                (document.getElementById(
+                    'surveyorId'
+                ).value || '').trim(),
+
             citizenId:
                 citizen.value,
 
@@ -2778,6 +2887,7 @@ document
                     cacheSurveyRecord(payload);
                     refreshRecordCache(payload);
                 }
+                try { if (payload.surveyorId) localStorage.setItem('animalSurveyorId', payload.surveyorId); } catch (e) {}
 
                 document.getElementById(
                     'status'
@@ -3000,7 +3110,7 @@ const RECORD_CACHE_KEY = 'animalSurveyCache_v1';
 /* ---------- เปลี่ยนหน้า ---------- */
 
 function showPage(name) {
-    ['centerPage', 'formPage', 'searchPage'].forEach(function(id) {
+    ['centerPage', 'formPage', 'searchPage', 'statsPage'].forEach(function(id) {
         const el = document.getElementById(id);
         if (!el) return;
         if (id === name) {
@@ -3311,6 +3421,100 @@ async function loadHouseFromServer() {
     }
 }
 
+function openStats() {
+    setStatMsg('');
+    const rb = document.getElementById('statResults');
+    rb.innerHTML = '';
+    rb.hidden = true;
+    showPage('statsPage');
+    window.scrollTo(0, 0);
+}
+
+/* ---------- ผลงานรายบุคคล (ตามเลขบัตรผู้สำรวจ) ---------- */
+
+function normStatName(s) {
+    return String(s || '').replace(/\s+/g, ' ').trim();
+}
+
+function statRecorderNameValue() {
+    return normStatName(document.getElementById('statRecorderName').value);
+}
+
+function setStatMsg(t) {
+    const el = document.getElementById('statMsg');
+    if (!el) return;
+    el.textContent = t;
+    el.hidden = !t;
+}
+
+function renderIndividualLocal() {
+    const sid = statRecorderNameValue();
+    if (!sid) { setStatMsg('กรุณากรอกชื่อ-นามสกุลผู้บันทึก'); return; }
+    const box = loadRecordCache();
+    const seen = {};
+    Object.keys(box).forEach(function(k) {
+        const rec = box[k] && box[k].record;
+        if (rec && normStatName(rec.recorderName) === sid) {
+            const hk = (rec.community || '') + '|' + ((rec.address && rec.address.addrNo) || '');
+            seen[hk] = rec.community;
+        }
+    });
+    renderStatResult(sid, seen, 'ในเครื่องนี้');
+}
+
+function renderStatResult(sid, seenMap, src) {
+    const box = document.getElementById('statResults');
+    const keys = Object.keys(seenMap);
+    const byComm = {};
+    keys.forEach(function(hk) {
+        const c = seenMap[hk] || '-';
+        byComm[c] = (byComm[c] || 0) + 1;
+    });
+    box.innerHTML = '';
+    box.hidden = true;
+    if (!keys.length) {
+        setStatMsg('ไม่พบผลงานของชื่อนี้ (' + src + ')');
+        return;
+    }
+    setStatMsg(sid + ' (' + src + ')');
+    const max = Math.max.apply(null, Object.keys(byComm).map(function(c) { return byComm[c]; }));
+    let rows = '';
+    Object.keys(byComm).sort().forEach(function(c) {
+        const n = byComm[c];
+        const pct = Math.round(n / max * 100);
+        rows += '<div class="stat-row"><div class="stat-top"><span>' + c + '</span><span>' +
+            n + ' หลัง</span></div>' +
+            '<div class="stat-bar"><div class="stat-fill" style="width:' + pct + '%"></div></div></div>';
+    });
+    box.hidden = false;
+    box.innerHTML = '<div class="stat-hero"><div class="stat-total">' + keys.length + '</div>' +
+        '<div class="stat-label">บ้านเลขที่ที่สำรวจแล้ว</div></div>' + rows;
+}
+
+async function loadSurveyorFromServer() {
+    const sid = statRecorderNameValue();
+    if (!sid) { setStatMsg('กรุณากรอกชื่อ-นามสกุลผู้บันทึก'); return; }
+    setStatMsg('กำลังโหลดจากเซิร์ฟเวอร์…');
+    try {
+        const res = await fetch(GAS_URL, {method: 'POST', body: JSON.stringify({
+            action: 'getSurveyorStats', recorderName: sid})});
+        const result = JSON.parse(await res.text());
+        const d = (result && typeof result.message === 'object') ? result.message : null;
+        if (!result || result.status !== 'success' || !d || typeof d.totalHouses !== 'number') {
+            const msg = (result && typeof result.message === 'string') ? result.message : 'ไม่ทราบสาเหตุ';
+            setStatMsg('โหลดไม่สำเร็จ: ' + msg);
+            return;
+        }
+        const seen = {};
+        (d.houses || []).forEach(function(h) {
+            seen[h.community + '|' + h.addrNo] = h.community;
+        });
+        renderStatResult(sid, seen, 'รวมทุกเครื่อง');
+    } catch (e) {
+        setStatMsg('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ กรุณาลองใหม่');
+    }
+}
+
 /* ---------- โหมดแก้ไข ---------- */
 
 function enterEditMode(rec, key) {
@@ -3404,6 +3608,7 @@ function fillSurveyForm(rec) {
         setPreview(q('.petPhotoPreview'), pet.photoUrl || pet.petPhotoBase64 || '');
     });
     document.getElementById('recorderName').value = rec.recorderName || '';
+    if (rec.surveyorId) document.getElementById('surveyorId').value = rec.surveyorId;
     setSelectValue(document.getElementById('recorderRole'), rec.recorderRole);
     document.getElementById('citizenId').value = rec.citizenId || '';
     document.getElementById('phone').value = rec.phone || '';
