@@ -51,6 +51,10 @@ function doPost(e) {
       return deleteHouseData_(data);
     }
 
+    if (data && data.action === 'getHouse') {
+      return getHouseData_(data);
+    }
+
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
     const timestamp = new Date();
 
@@ -63,6 +67,14 @@ function doPost(e) {
     }
 
     const addr = data.address || {};
+
+    // โหมดแก้ไข: ลบแถวเดิมของบ้านหลังนี้ก่อน แล้วบันทึกรอบใหม่ทับ (กันแถวซ้ำ)
+    const isUpdate = data && data.action === 'updateHouse';
+    if (isUpdate) {
+      const removed = deleteHouseRows_(ss, centerName, communityName, formatHouseNo_(addr.addrNo));
+      Logger.log('UPDATE removed rows: ' + removed);
+    }
+    const keepPhotos = isUpdate ? (data.existingPhotos || {}) : null;
 
     /************ PET STRUCTURE ************/
     let pets = [];
@@ -122,11 +134,14 @@ function doPost(e) {
       communityFolder, ownerFolderName
     );
 
-    const ownerPhotoUrl = savePhotoSmart_(
+    let ownerPhotoUrl = savePhotoSmart_(
       data.ownerPhotoBase64 || data.ownerPhoto || data.ownerImage,
       ownerFolder,
       'รูปเจ้าของ'
     );
+    if (!ownerPhotoUrl && keepPhotos && keepPhotos.owner) {
+      ownerPhotoUrl = keepPhotos.owner;
+    }
 
     const petMainFolder = getOrCreateFolder_(
       ownerFolder, 'สัตว์เลี้ยง'
@@ -176,6 +191,9 @@ function doPost(e) {
           'สัตว์_' + (index + 1)
         );
       }
+      if (!petPhotoUrl && keepPhotos && keepPhotos.pets && keepPhotos.pets[index]) {
+        petPhotoUrl = keepPhotos.pets[index];
+      }
 
       const rowObj = buildRowObject_(
         timestamp, year, centerName, communityName,
@@ -208,7 +226,8 @@ function doPost(e) {
     }
 
     return output_(
-      'บันทึกข้อมูลสำเร็จ อัปเดต SUMMARY_AUTO และ CHARTS_AUTO แล้ว' + summaryNote,
+      (isUpdate ? 'แก้ไขข้อมูลบ้านเลขที่ ' + safe_(addr.addrNo) + ' สำเร็จ อัปเดต SUMMARY_AUTO และ CHARTS_AUTO แล้ว'
+                : 'บันทึกข้อมูลสำเร็จ อัปเดต SUMMARY_AUTO และ CHARTS_AUTO แล้ว') + summaryNote,
       true
     );
   } catch (err) {
@@ -2060,4 +2079,132 @@ function rebuildSummaryAndChartsNow() {
   } finally {
     lock.releaseLock();
   }
+}
+
+/******************** UPDATE / GET HOUSE ********************/
+/* ลบแถวของบ้านหลังหนึ่งออกจากชีต (ใช้ร่วมกับลบและแก้ไข) คืนจำนวนแถวที่ลบ */
+function deleteHouseRows_(ss, centerName, communityName, addrNo) {
+  let total = 0;
+  [centerName, communityName].forEach(function(name) {
+    if (!name) return;
+    const sheet = ss.getSheetByName(name);
+    if (!sheet || sheet.getLastRow() < 2) return;
+    const lastCol = sheet.getLastColumn();
+    const headers = sheet.getRange(1, 1, 1, lastCol)
+      .getDisplayValues()[0].map(function(h) { return String(h).trim(); });
+    const ci = headers.indexOf('ชุมชน');
+    const hi = headers.indexOf('บ้านเลขที่');
+    if (ci === -1 || hi === -1) return;
+    const vals = sheet.getRange(2, 1, sheet.getLastRow() - 1, lastCol).getDisplayValues();
+    const delRows = [];
+    vals.forEach(function(r, i) {
+      const comOk = String(r[ci]).trim() === communityName;
+      const houseOk = formatHouseNo_(r[hi]) === addrNo;
+      if (comOk && houseOk) delRows.push(i + 2);
+    });
+    delRows.sort(function(a, b) { return b - a; }).forEach(function(ro) {
+      sheet.deleteRow(ro);
+    });
+    total += delRows.length;
+  });
+  return total;
+}
+
+/* ดึงข้อมูลบ้านหลังหนึ่ง คืนรูป payload เดียวกับที่หน้าเว็บส่ง */
+function getHouseData_(data) {
+  const centerName = safe_(data.centerName || data.center);
+  const communityName = safe_(data.communityName || data.community);
+  const addrNo = safe_(data.addrNo);
+  if (!centerName || !communityName || !addrNo) {
+    return output_('ข้อมูลไม่ครบ (ต้องมีศูนย์ ชุมชน บ้านเลขที่)');
+  }
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(communityName) || ss.getSheetByName(centerName);
+  if (!sheet || sheet.getLastRow() < 2) {
+    return output_('ไม่พบข้อมูลบ้านเลขที่ ' + addrNo);
+  }
+  const lastCol = sheet.getLastColumn();
+  const headers = sheet.getRange(1, 1, 1, lastCol)
+    .getDisplayValues()[0].map(function(h) { return String(h).trim(); });
+  const ci = headers.indexOf('ชุมชน');
+  const hi = headers.indexOf('บ้านเลขที่');
+  if (ci === -1 || hi === -1) {
+    return output_('ชีตยังไม่มีโครงข้อมูลที่อ่านได้');
+  }
+  const vals = sheet.getRange(2, 1, sheet.getLastRow() - 1, lastCol).getDisplayValues();
+  const rows = [];
+  vals.forEach(function(r) {
+    if (String(r[ci]).trim() === communityName && formatHouseNo_(r[hi]) === addrNo) {
+      const o = {};
+      headers.forEach(function(h, i) { o[h] = r[i]; });
+      rows.push(o);
+    }
+  });
+  if (!rows.length) {
+    return output_('ไม่พบข้อมูลบ้านเลขที่ ' + addrNo);
+  }
+  const first = rows[0];
+  const gv = function(row, k) { return row[k] !== undefined ? String(row[k]) : ''; };
+  const g = function(k) { return gv(first, k); };
+  let animalType = g('ประเภทสัตว์');
+  let otherAnimalType = g('ชนิดสัตว์ (อื่น)');
+  if (animalType.indexOf('อื่นๆ (') === 0 && animalType.slice(-1) === ')') {
+    otherAnimalType = otherAnimalType || animalType.slice(5, -1);
+    animalType = 'อื่นๆโปรดระบุ';
+  }
+  const pets = rows.map(function(r) {
+    return {
+      no: gv(r, 'ลำดับสัตว์'),
+      name: gv(r, 'ชื่อสัตว์') === 'ไม่ระบุ' ? '' : gv(r, 'ชื่อสัตว์'),
+      gender: gv(r, 'เพศ') || 'ไม่ระบุ',
+      ageYear: gv(r, 'อายุ (ปี)'),
+      ageMonth: gv(r, 'อายุ (เดือน)'),
+      color: gv(r, 'สี / ตำหนิ'),
+      sterilization: gv(r, 'สถานะทำหมัน') || 'ยังไม่ทำหมัน',
+      contraceptiveDate: gv(r, 'วันที่ฉีดยาคุม'),
+      contraceptiveVet: gv(r, 'สัตวแพทย์ผู้ฉีดยาคุม'),
+      rabies: gv(r, 'สถานะวัคซีนพิษสุนัขบ้า') || 'ไม่เคยฉีดวัคซีนพิษสุนัขบ้า',
+      rabiesDate: gv(r, 'วันที่ฉีดวัคซีน'),
+      rabiesVet: gv(r, 'สัตวแพทย์ผู้ฉีดวัคซีน'),
+      raisingStyle: gv(r, 'ลักษณะการเลี้ยง') || 'เลี้ยงในพื้นที่จำกัดตลอดเวลา',
+      raisingLocation: gv(r, 'สถานที่เลี้ยง') || 'บ้านพักอาศัย',
+      photoUrl: gv(r, 'ลิงก์รูปสัตว์')
+    };
+  });
+  const hasPets = pets.some(function(p) { return p.name || p.ageYear || p.ageMonth || p.photoUrl; });
+  const coords = g('พิกัดที่เลือก').split(',');
+  const record = {
+    centerName: centerName,
+    community: communityName,
+    animalType: animalType,
+    otherAnimalType: otherAnimalType,
+    otherAnimalQty: g('จำนวนสัตว์ (อื่น)'),
+    ownerName: g('ชื่อเจ้าของสัตว์') === 'ไม่ระบุ' ? '' : g('ชื่อเจ้าของสัตว์'),
+    recorderName: g('ผู้บันทึก'),
+    recorderRole: g('ตำแหน่ง'),
+    citizenId: g('เลขบัตรประชาชน'),
+    phone: g('เบอร์โทรศัพท์มือถือ'),
+    homePhone: g('เบอร์โทรศัพท์บ้าน'),
+    raisingArea: g('พื้นที่การเลี้ยง'),
+    address: {
+      addrNo: g('บ้านเลขที่'),
+      road: g('ถนน'),
+      soi: g('ซอย'),
+      subdistrict: g('ตำบล') || 'ในเมือง',
+      district: g('อำเภอ') || 'เมือง',
+      province: g('จังหวัด') || 'อุบลราชธานี'
+    },
+    houseLocation: {
+      latitude: (coords[0] || '').trim(),
+      longitude: (coords[1] || '').trim(),
+      status: 'surveyed'
+    },
+    ownerPhotoUrl: g('ลิงก์รูปเจ้าของ'),
+    pets: hasPets ? pets : [],
+    existingPhotos: {
+      owner: g('ลิงก์รูปเจ้าของ'),
+      pets: pets.map(function(p) { return p.photoUrl; })
+    }
+  };
+  return output_({found: true, rows: rows.length, record: record}, true);
 }
